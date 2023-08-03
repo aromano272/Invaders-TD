@@ -4,7 +4,6 @@ import android.graphics.*
 import com.andreromano.invaders.entities.*
 import com.andreromano.invaders.extensions.exhaustive
 import com.andreromano.invaders.extensions.toPx
-import java.lang.Math.abs
 
 class Game {
     private var currentLevelIndex: Int = 0
@@ -13,8 +12,8 @@ class Game {
 
     private var screenWidth = 0
     private var screenHeight = 0
-    private var sceneWidth = 0
-    private var sceneHeight = 0
+    private var boardSceneWidth = 0
+    private var boardSceneHeight = 0
     private var entityWidth = 0
     private var entityHeight = 0
     private var mapTileWidth = 0
@@ -112,11 +111,11 @@ class Game {
         clearDestroyedEntities()
 
 //        canvas.drawText("Rect Pos: (${pacman?.x}, ${pacman?.y})", sceneWidth / 2f, sceneHeight / 2f, textPaint)
-        canvas.drawText("Wave: ${currentWave + 1}, Enemies: ${enemyEntities.size}", 50f, sceneHeight - 50f, boldTextPaint)
+        canvas.drawText("Wave: ${currentWave + 1}, Enemies: ${enemyEntities.size}", 50f, boardSceneHeight - 50f, boldTextPaint)
 
         // clear padding
-        canvas.drawRect(Rect(sceneWidth, 0, screenWidth, screenHeight), blackPaint)
-        canvas.drawRect(Rect(0, sceneHeight, screenWidth, screenHeight), blackPaint)
+        canvas.drawRect(Rect(boardSceneWidth, 0, screenWidth, screenHeight), blackPaint)
+        canvas.drawRect(Rect(0, boardSceneHeight, screenWidth, screenHeight), blackPaint)
 
         drawDebug(canvas)
 
@@ -200,6 +199,9 @@ class Game {
     }
 
     fun sceneSizeChanged(w: Int, h: Int) {
+        require(h > w) {
+            "Game doesn't support landscape mode"
+        }
         screenWidth = w
         screenHeight = h
 
@@ -217,7 +219,7 @@ class Game {
         mapTileWidth = rows.first().length
         mapTileHeight = rows.size
         entityWidth = screenWidth / mapTileWidth
-        entityHeight = screenHeight / mapTileHeight
+        entityHeight = entityWidth
 
         // Make size divisible by 2 so we don't issues with center
         entityWidth -= entityWidth % 2
@@ -225,10 +227,9 @@ class Game {
 
         // TODO: Pad and center gameboard
         val remainderWidth = screenWidth % mapTileWidth
-        val remainderHeight = screenHeight % mapTileHeight
 
-        sceneWidth = screenWidth - remainderWidth
-        sceneHeight = screenHeight - remainderHeight
+        boardSceneWidth = screenWidth - remainderWidth
+        boardSceneHeight = entityHeight * mapTileHeight
 
         entitiesMap = Array<Array<Entity?>>(mapTileHeight) {
             Array(mapTileWidth) {
