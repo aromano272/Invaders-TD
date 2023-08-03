@@ -39,7 +39,8 @@ data class Vec2F(
 }
 
 fun dot(a: Vec2F, b: Vec2F): Float {
-    // TODO(aromano): Not sure if this is actually true, Freya mentioned that in dot(a, b), a needs to be normalized
-    check(a.magnitude == 1f)
+    // TODO(aromano): Not sure if this is actually true, Freya mentioned that in dot(a, b), one of the vectors needs to be normalized
+    //                Actually there are cases where we don't want this but it's move advanced cases so ill keep this here for now
+    check(a.magnitude == 1f || b.magnitude == 1f)
     return a.x * b.x + a.y * b.y
 }

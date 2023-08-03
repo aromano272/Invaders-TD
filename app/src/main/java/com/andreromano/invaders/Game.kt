@@ -120,6 +120,8 @@ class Game {
 
         drawDebug(canvas)
 
+        drawTurretMenu(canvas)
+
         deferred.forEach {
             it()
         }
@@ -316,6 +318,10 @@ class Game {
         }
 
         currentLevelPath = pathSegments
+    }
+
+    fun drawTurretMenu(canvas: Canvas) {
+
     }
 
     fun drawDebug(canvas: Canvas) {
