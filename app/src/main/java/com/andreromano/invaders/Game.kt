@@ -36,6 +36,7 @@ class Game {
     }
 
     private var enemyEntities = mutableListOf<EnemyEntity>()
+    private var bulletEntities = mutableListOf<BulletEntity>()
 
     private val redStrokePaint = Paint().apply {
         style = Paint.Style.STROKE
@@ -98,6 +99,10 @@ class Game {
             }
         }
         enemyEntities.forEach { entity ->
+            entity.update(deltaTime)
+            entity.render(canvas)
+        }
+        bulletEntities.forEach { entity ->
             entity.update(deltaTime)
             entity.render(canvas)
         }
@@ -174,6 +179,7 @@ class Game {
 
     private fun clearDestroyedEntities() {
         enemyEntities.removeIf { it.destroyed }
+        bulletEntities.removeIf { it.destroyed }
     }
 
 
@@ -254,7 +260,12 @@ class Game {
                         PathEntity(pos, tileX, tileY, entityWidth, entityHeight)
                     }
                     't' -> {
-                        TurretEntity(pos, tileX, tileY, entityWidth, entityHeight, { enemyEntities })
+                        TurretEntity(pos, tileX, tileY,
+                            entityWidth, entityHeight,
+                            250,
+                            { enemyEntities },
+                            { bulletEntity -> bulletEntities.add(bulletEntity) }
+                        )
                     }
                     else -> throw UnsupportedOperationException("Could not parse symbol: '$c' at x: $x y: $y")
                 }
@@ -309,20 +320,20 @@ class Game {
 
     fun drawDebug(canvas: Canvas) {
         // assignemtn #3
-        val origin = Vec2F(screenWidth / 2f, sceneHeight / 2f)
-
-        val point = Vec2F(100f, 20f)
-
-        val xAxis = Vec2F(3f, 2f)
-        val yAxis = Vec2F(2f, -3f)
-
-        canvas.drawDebugVec(origin, xAxis, color = Color.RED)
-        canvas.drawDebugVec(origin, yAxis, color = Color.GREEN)
-        canvas.drawPoint(origin.x, origin.y, Paint().apply { style = Paint.Style.FILL; color = Color.WHITE; strokeWidth = 20f })
-
-        canvas.drawPoint(point.x, point.y, Paint().apply { style = Paint.Style.FILL; color = Color.MAGENTA; strokeWidth = 10f })
-
-        return
+//        val origin = Vec2F(screenWidth / 2f, sceneHeight / 2f)
+//
+//        val point = Vec2F(100f, 20f)
+//
+//        val xAxis = Vec2F(3f, 2f)
+//        val yAxis = Vec2F(2f, -3f)
+//
+//        canvas.drawDebugVec(origin, xAxis, color = Color.RED)
+//        canvas.drawDebugVec(origin, yAxis, color = Color.GREEN)
+//        canvas.drawPoint(origin.x, origin.y, Paint().apply { style = Paint.Style.FILL; color = Color.WHITE; strokeWidth = 20f })
+//
+//        canvas.drawPoint(point.x, point.y, Paint().apply { style = Paint.Style.FILL; color = Color.MAGENTA; strokeWidth = 10f })
+//
+//        return
 /*
         // assingment #2
 
@@ -367,22 +378,6 @@ class Game {
 
     }
 
-    fun Canvas.drawDebugVec(
-        origin: Vec2F,
-        vec: Vec2F,
-        length: Float = 100f,
-        color: Int = Color.MAGENTA,
-    ) {
-        val vec = vec * length
-        drawLine(origin.x, origin.y,
-            origin.x + vec.x, origin.y + vec.y,
-            Paint().apply {
-                style = Paint.Style.FILL
-                this.color = color
-                strokeWidth = 4f
-            })
-    }
-
     enum class ViewEvent {
         RESTART_CLICKED,
     }
@@ -393,4 +388,21 @@ class Game {
     private fun getTileXFromScreenX(screenX: Int): Int = screenX / entityWidth
     private fun getTileYFromScreenY(screenY: Int): Int = screenY / entityHeight
 
+}
+
+
+fun Canvas.drawDebugVec(
+    origin: Vec2F,
+    vec: Vec2F,
+    length: Float = 100f,
+    color: Int = Color.MAGENTA,
+) {
+    val vec = vec * length
+    drawLine(origin.x, origin.y,
+        origin.x + vec.x, origin.y + vec.y,
+        Paint().apply {
+            style = Paint.Style.FILL
+            this.color = color
+            strokeWidth = 4f
+        })
 }

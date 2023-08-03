@@ -21,7 +21,7 @@ enum class Level(
             #        x#
             ###########
         """.trimIndent(),
-        waves = (0..20).map { number -> TEST_WAVE(1 + (number / 100f)) },
+        waves = (0..20).map { number -> TEST_WAVE(1 + (number / 10f)) },
     ),
 
     TWO(
@@ -38,15 +38,15 @@ enum class Level(
             #        x#
             ###########
         """.trimIndent(),
-        waves = (0..2).map { number -> TEST_WAVE(1 + (number / 100f)) },
+        waves = (0..2).map { number -> TEST_WAVE(1 + (number / 10f)) },
     ),
 }
 
 private fun TEST_WAVE(scale: Float) = Wave(
     enemyHealth = (100 * scale).roundToInt(),
     enemySpeed = 3,
-    enemyCount = 1,
-    enemySpawnDelay = 500,
+    enemyCount = 30,
+    enemySpawnDelay = 750,
     enemyMoney = (10 * scale).roundToInt(),
 )
 

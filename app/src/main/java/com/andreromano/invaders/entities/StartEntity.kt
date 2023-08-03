@@ -30,6 +30,6 @@ class StartEntity(
     }
 
     override fun render(canvas: Canvas) {
-        canvas.drawRect(hitbox.toRectF(), paint)
+        canvas.drawRect(hitbox, paint)
     }
 }

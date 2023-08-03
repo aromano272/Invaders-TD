@@ -2,6 +2,7 @@ package com.andreromano.invaders
 
 import android.graphics.Canvas
 import android.graphics.Rect
+import android.graphics.RectF
 import kotlin.math.roundToInt
 
 abstract class Entity(
@@ -11,13 +12,13 @@ abstract class Entity(
     val width: Int,
     val height: Int,
 ) {
-    private val _rect = Rect()
-    val hitbox: Rect
+    private val _rect = RectF()
+    val hitbox: RectF
         get() = _rect.apply {
-            left = (pos.x - width / 2).roundToInt()
-            top = (pos.y - height / 2).roundToInt()
-            right = (pos.x + width / 2).roundToInt()
-            bottom = (pos.y + height / 2).roundToInt()
+            left = (pos.x - width / 2)
+            top = (pos.y - height / 2)
+            right = (pos.x + width / 2)
+            bottom = (pos.y + height / 2)
         }
 
     fun currentPos(): Position = Position(pos, tileX, tileY)

@@ -36,7 +36,7 @@ class BuildableEntity(
     }
 
     override fun render(canvas: Canvas) {
-        canvas.drawRect(hitbox.toRectF(), paint2)
-        canvas.drawRect(hitbox.toRectF().scale(0.9f), paint)
+        canvas.drawRect(hitbox, paint2)
+        canvas.drawRect(hitbox.scale(0.9f), paint)
     }
 }

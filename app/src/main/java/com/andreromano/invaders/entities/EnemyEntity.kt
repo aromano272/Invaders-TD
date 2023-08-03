@@ -8,6 +8,7 @@ import com.andreromano.invaders.Entity
 import com.andreromano.invaders.Position
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.extensions.scale
+import java.util.UUID
 
 class EnemyEntity(
     pos: Vec2F,
@@ -26,9 +27,13 @@ class EnemyEntity(
     width = width,
     height = height,
 ) {
+    val id = UUID.randomUUID().toString()
+
     var destroyed: Boolean = false
 
     var withinTurretRange = false
+
+    private var currHealth = health
 
     private var currentPathSegment: Int = 0
     private var currDirection: Vec2F = Vec2F.zero()
@@ -43,11 +48,23 @@ class EnemyEntity(
         color = Color.RED
     }
 
+    private val healthBgPaint = Paint().apply {
+        style = Paint.Style.FILL
+        color = Color.RED
+        strokeWidth = 6f
+    }
+
+    private val healthCurrPaint = Paint().apply {
+        style = Paint.Style.FILL
+        color = Color.GREEN
+        strokeWidth = 6f
+    }
+
     override fun update(deltaTime: Int) {
         // Reached end of segment
         if (currentPathSegment == path.size) return
 
-        val moveAmount = (speed * deltaTime) / 25f
+        val moveAmount = (speed * deltaTime) / 5f
 
         val segment = path[currentPathSegment]
         val posDifferenceToTarget = segment.end.pos - pos
@@ -87,10 +104,22 @@ class EnemyEntity(
     }
 
     override fun render(canvas: Canvas) {
-        canvas.drawOval(hitbox.toRectF().scale(0.75f), paint)
+        canvas.drawOval(hitbox.scale(0.75f), paint)
         if (withinTurretRange) {
-            canvas.drawOval(hitbox.toRectF().scale(0.20f), withinTurretRangePaint)
+            canvas.drawOval(hitbox.scale(0.20f), withinTurretRangePaint)
         }
+        if (currHealth < health) {
+            val healthPercent = currHealth.toFloat() / health
+            val hitboxWidth = hitbox.right - hitbox.left
+            val currHealthLineRight = (hitboxWidth * healthPercent) + hitbox.left
+            canvas.drawLine(hitbox.left, hitbox.top, hitbox.right, hitbox.top, healthBgPaint)
+            canvas.drawLine(hitbox.left, hitbox.top, currHealthLineRight, hitbox.top, healthCurrPaint)
+        }
+    }
+
+    fun wasHit(damage: Int) {
+        currHealth -= damage / 2
+        if (currHealth <= 0) destroyed = true
     }
 }
 

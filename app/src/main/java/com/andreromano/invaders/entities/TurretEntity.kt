@@ -6,6 +6,7 @@ import android.graphics.Paint
 import androidx.core.graphics.toRectF
 import com.andreromano.invaders.Entity
 import com.andreromano.invaders.Vec2F
+import com.andreromano.invaders.drawDebugVec
 import com.andreromano.invaders.extensions.scale
 
 class TurretEntity(
@@ -14,7 +15,9 @@ class TurretEntity(
     tileY: Int,
     width: Int,
     height: Int,
-    private val getEnemies: () -> List<EnemyEntity>
+    private val shootDelay: Int,
+    private val getEnemies: () -> List<EnemyEntity>,
+    private val spawnBullet: (BulletEntity) -> Unit
 ) : Entity(
     pos = pos,
     tileX = tileX,
@@ -22,6 +25,8 @@ class TurretEntity(
     width = width,
     height = height
 ) {
+
+    private var bulletSpawnDelay = 0
 
     private val rangeRadius = hitbox.width() * 1.5f
 
@@ -40,28 +45,35 @@ class TurretEntity(
     var turretToEnemy: Vec2F = Vec2F.zero()
 
     override fun update(deltaTime: Int) {
+        bulletSpawnDelay -= deltaTime
         val enemies = getEnemies()
-        enemies.forEach { enemy ->
+        val enemiesWithinRange = enemies.filter { enemy ->
             enemyPos = enemy.pos
             turretToEnemy = enemy.pos - this.pos
             val distanceToTurret = turretToEnemy.magnitude
-            enemy.withinTurretRange = distanceToTurret < rangeRadius
+            val enemyWithinTurretRange = distanceToTurret < rangeRadius
+            enemyWithinTurretRange
         }
+
+        // TODO(aromano): debug
+        enemies.forEach {
+            it.withinTurretRange = enemiesWithinRange.contains(it)
+        }
+
+        val targetEnemy = enemiesWithinRange.firstOrNull() ?: return
+        if (bulletSpawnDelay > 0) return
+        bulletSpawnDelay = shootDelay
+
+        val getEnemyById: (String) -> EnemyEntity? = { id ->
+            getEnemies().find { it.id == id }
+        }
+        val bullet = BulletEntity(pos, 0, 0, width, height, 130, targetEnemy.id, 10, getEnemyById)
+        spawnBullet(bullet)
     }
 
     override fun render(canvas: Canvas) {
-        canvas.drawOval(hitbox.toRectF().scale(0.60f), paint)
-        canvas.drawOval(hitbox.toRectF().scale(3f), radiusPaint)
-        canvas.drawLine(
-            this.pos.x,
-            this.pos.y,
-            this.pos.x + turretToEnemy.x,
-            this.pos.y + turretToEnemy.y,
-            Paint().apply {
-                style = Paint.Style.FILL
-                color = Color.GREEN
-                strokeWidth = 4f
-            }
-        )
+        canvas.drawOval(hitbox.scale(0.60f), paint)
+        canvas.drawOval(hitbox.scale(3f), radiusPaint)
+        canvas.drawDebugVec(this.pos, turretToEnemy, length = 1f)
     }
 }
