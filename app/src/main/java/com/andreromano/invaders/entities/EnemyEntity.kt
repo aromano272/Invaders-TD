@@ -18,7 +18,7 @@ class EnemyEntity(
     height: Int,
     private val health: Int,
     private val speed: Int,
-    private val money: Int,
+    val money: Int,
     private val path: List<PathSegment>
 ) : Entity(
     pos = pos,
@@ -29,7 +29,10 @@ class EnemyEntity(
 ) {
     val id = UUID.randomUUID().toString()
 
-    var destroyed: Boolean = false
+    var killed: Boolean = false
+    var escaped: Boolean = false
+    val destroyed: Boolean
+        get() = killed || escaped
 
     var withinTurretRange = false
 
@@ -97,7 +100,7 @@ class EnemyEntity(
         }
 
         if (currentPathSegment == path.size) {
-            destroyed = true
+            escaped = true
         }
 
         pos = newPos
@@ -119,7 +122,7 @@ class EnemyEntity(
 
     fun wasHit(damage: Int) {
         currHealth -= damage / 2
-        if (currHealth <= 0) destroyed = true
+        if (currHealth <= 0) killed = true
     }
 }
 

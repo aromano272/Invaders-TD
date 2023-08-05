@@ -2,8 +2,8 @@ package com.andreromano.invaders
 
 import android.graphics.*
 import com.andreromano.invaders.entities.*
-import com.andreromano.invaders.extensions.exhaustive
 import com.andreromano.invaders.extensions.toPx
+import java.lang.Exception
 
 class Game {
     private var currentLevelIndex: Int = 0
@@ -23,6 +23,7 @@ class Game {
     private var currTime: Long = 0
 
     private var score: Int = 0
+    private var currMoney: Int = 200
 
     private lateinit var startEntity: StartEntity
     private lateinit var endEntity: EndEntity
@@ -36,6 +37,8 @@ class Game {
 
     private var enemyEntities = mutableListOf<EnemyEntity>()
     private var bulletEntities = mutableListOf<BulletEntity>()
+    private var selectedBuildableEntity: BuildableEntity? = null
+    private var buildTurretMenuEntity: BuildTurretMenuEntity? = null
 
     private val redStrokePaint = Paint().apply {
         style = Paint.Style.STROKE
@@ -105,6 +108,10 @@ class Game {
             entity.update(deltaTime)
             entity.render(canvas)
         }
+        if (selectedBuildableEntity != null) {
+            buildTurretMenuEntity?.update(deltaTime)
+            buildTurretMenuEntity?.render(canvas)
+        }
 
         updateGameState(deltaTime)
 
@@ -112,14 +119,13 @@ class Game {
 
 //        canvas.drawText("Rect Pos: (${pacman?.x}, ${pacman?.y})", sceneWidth / 2f, sceneHeight / 2f, textPaint)
         canvas.drawText("Wave: ${currentWave + 1}, Enemies: ${enemyEntities.size}", 50f, boardSceneHeight - 50f, boldTextPaint)
+        canvas.drawText("Money: ${currMoney}", 50f, boardSceneHeight - 50f + boldTextPaint.textSize, boldTextPaint)
 
         // clear padding
-        canvas.drawRect(Rect(boardSceneWidth, 0, screenWidth, screenHeight), blackPaint)
-        canvas.drawRect(Rect(0, boardSceneHeight, screenWidth, screenHeight), blackPaint)
+//        canvas.drawRect(Rect(boardSceneWidth, 0, screenWidth, screenHeight), blackPaint)
+//        canvas.drawRect(Rect(0, boardSceneHeight, screenWidth, screenHeight), blackPaint)
 
         drawDebug(canvas)
-
-        drawTurretMenu(canvas)
 
         deferred.forEach {
             it()
@@ -179,7 +185,11 @@ class Game {
     }
 
     private fun clearDestroyedEntities() {
-        enemyEntities.removeIf { it.destroyed }
+        val destroyedEnemies = enemyEntities.filter { it.destroyed }
+        destroyedEnemies.forEach { it ->
+            if (it.killed) currMoney += it.money
+        }
+        enemyEntities.removeAll(destroyedEnemies)
         bulletEntities.removeIf { it.destroyed }
     }
 
@@ -190,8 +200,24 @@ class Game {
 
     fun onViewEvent(viewEvent: ViewEvent) {
         when (viewEvent) {
-            ViewEvent.RESTART_CLICKED -> restartLevel()
-        }.exhaustive
+            is ViewEvent.ScreenClicked -> {
+                val tileX = getTileXFromScreenX(viewEvent.x.toInt())
+                val tileY = getTileYFromScreenY(viewEvent.y.toInt())
+                val entity = try {
+                    entitiesMap[tileY][tileX]
+                } catch (ex: Exception) {
+                    null
+                }
+
+                if (entity is BuildableEntity) {
+                    selectedBuildableEntity?.selected = false
+                    selectedBuildableEntity = entity
+                    entity.selected = true
+                } else if (buildTurretMenuEntity?.hitbox?.contains(viewEvent.x, viewEvent.y) == true) {
+                    buildTurretMenuEntity!!.onClick(viewEvent.x, viewEvent.y)
+                }
+            }
+        }
     }
 
     private fun removeEntity(entity: Entity) {
@@ -262,14 +288,6 @@ class Game {
                     ' ' -> {
                         PathEntity(pos, tileX, tileY, entityWidth, entityHeight)
                     }
-                    't' -> {
-                        TurretEntity(pos, tileX, tileY,
-                            entityWidth, entityHeight,
-                            250,
-                            { enemyEntities },
-                            { bulletEntity -> bulletEntities.add(bulletEntity) }
-                        )
-                    }
                     else -> throw UnsupportedOperationException("Could not parse symbol: '$c' at x: $x y: $y")
                 }
                 entitiesMap[tileY][tileX] = entity
@@ -277,6 +295,20 @@ class Game {
         }
 
         walkThroughLevelAndCreatePath()
+
+        buildTurretMenuEntity = BuildTurretMenuEntity(
+            Vec2F(screenWidth / 2f, screenHeight - 200 / 2f),
+            0, 0, screenWidth, 200,
+            getSelectedBuildableEntity = { selectedBuildableEntity!! },
+            getCurrMoney = { currMoney },
+            spawnTurret = { turret ->
+                currMoney -= turret.cost
+                selectedBuildableEntity = null
+                entitiesMap[turret.tileY][turret.tileX] = turret
+            },
+            getEnemies = { enemyEntities },
+            spawnBullet = { bullet -> bulletEntities.add(bullet) }
+        )
     }
 
     private fun walkThroughLevelAndCreatePath() {
@@ -321,72 +353,11 @@ class Game {
         currentLevelPath = pathSegments
     }
 
-    fun drawTurretMenu(canvas: Canvas) {
-
-    }
-
     fun drawDebug(canvas: Canvas) {
-        // assignemtn #3
-//        val origin = Vec2F(screenWidth / 2f, sceneHeight / 2f)
-//
-//        val point = Vec2F(100f, 20f)
-//
-//        val xAxis = Vec2F(3f, 2f)
-//        val yAxis = Vec2F(2f, -3f)
-//
-//        canvas.drawDebugVec(origin, xAxis, color = Color.RED)
-//        canvas.drawDebugVec(origin, yAxis, color = Color.GREEN)
-//        canvas.drawPoint(origin.x, origin.y, Paint().apply { style = Paint.Style.FILL; color = Color.WHITE; strokeWidth = 20f })
-//
-//        canvas.drawPoint(point.x, point.y, Paint().apply { style = Paint.Style.FILL; color = Color.MAGENTA; strokeWidth = 10f })
-//
-//        return
-/*
-        // assingment #2
-
-        val origin = Vec2F(screenWidth / 2f, sceneHeight / 2f)
-
-        canvas.drawLine(origin.x, 0f,
-            origin.x, screenHeight.toFloat(),
-            Paint().apply {
-                style = Paint.Style.FILL
-                color = Color.GREEN
-                strokeWidth = 2f
-            })
-
-        canvas.drawLine(0f, origin.y,
-            screenWidth.toFloat(), origin.y,
-            Paint().apply {
-                style = Paint.Style.FILL
-                color = Color.RED
-                strokeWidth = 2f
-            })
-
-
-        val enemy = enemyEntities.firstOrNull() ?: return
-
-        val lookingAt = Vec2F(0f, -1f)
-        val lookAtTrigger = 0.9
-        var triggered = false
-
-        val originToEnemy = enemy.pos - origin
-        canvas.drawDebugVec(origin, originToEnemy, length = 1f, color = Color.YELLOW)
-        val dotP = dot(lookingAt, originToEnemy.normalized())
-        if (dotP >= lookAtTrigger) {
-            triggered = true
-        }
-        println(dotP)
-
-
-        val lookAtColor = if (triggered) Color.CYAN else Color.MAGENTA
-
-        canvas.drawDebugVec(enemy.pos, lookingAt, color = lookAtColor)
-*/
-
     }
 
-    enum class ViewEvent {
-        RESTART_CLICKED,
+    sealed class ViewEvent {
+        class ScreenClicked(val x: Float, val y: Float) : ViewEvent()
     }
 
     private fun getScreenXFromTileX(tileX: Int): Int = tileX * entityWidth + entityWidth / 2

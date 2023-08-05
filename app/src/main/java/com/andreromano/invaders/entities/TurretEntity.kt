@@ -15,7 +15,10 @@ class TurretEntity(
     tileY: Int,
     width: Int,
     height: Int,
+    private val shootDamage: Int,
     private val shootDelay: Int,
+    val cost: Int,
+    private val rangeRadiusToWidthFactor: Float,
     private val getEnemies: () -> List<EnemyEntity>,
     private val spawnBullet: (BulletEntity) -> Unit
 ) : Entity(
@@ -28,7 +31,7 @@ class TurretEntity(
 
     private var bulletSpawnDelay = 0
 
-    private val rangeRadius = hitbox.width() * 1.5f
+    private val rangeRadius = hitbox.width() * rangeRadiusToWidthFactor
 
     private val paint = Paint().apply {
         style = Paint.Style.FILL
@@ -46,34 +49,30 @@ class TurretEntity(
 
     override fun update(deltaTime: Int) {
         bulletSpawnDelay -= deltaTime
+        if (bulletSpawnDelay > 0) return
+        bulletSpawnDelay = shootDelay
+
         val enemies = getEnemies()
-        val enemiesWithinRange = enemies.filter { enemy ->
+        // TODO(aromano): If there's already a bullet inflight that's gonna kill an enemy, we shouldn't fire more bullets to that enemy
+        // find the first enemy within turret range
+        val targetEnemy = enemies.firstOrNull { enemy ->
             enemyPos = enemy.pos
             turretToEnemy = enemy.pos - this.pos
             val distanceToTurret = turretToEnemy.magnitude
             val enemyWithinTurretRange = distanceToTurret < rangeRadius
             enemyWithinTurretRange
-        }
-
-        // TODO(aromano): debug
-        enemies.forEach {
-            it.withinTurretRange = enemiesWithinRange.contains(it)
-        }
-
-        val targetEnemy = enemiesWithinRange.firstOrNull() ?: return
-        if (bulletSpawnDelay > 0) return
-        bulletSpawnDelay = shootDelay
+        } ?: return
 
         val getEnemyById: (String) -> EnemyEntity? = { id ->
             getEnemies().find { it.id == id }
         }
-        val bullet = BulletEntity(pos, 0, 0, width, height, 130, targetEnemy.id, 10, getEnemyById)
+        val bullet = BulletEntity(pos, 0, 0, width, height, shootDamage, targetEnemy.id, 10, getEnemyById)
         spawnBullet(bullet)
     }
 
     override fun render(canvas: Canvas) {
         canvas.drawOval(hitbox.scale(0.60f), paint)
-        canvas.drawOval(hitbox.scale(3f), radiusPaint)
+        canvas.drawOval(hitbox.scale(rangeRadiusToWidthFactor * 2), radiusPaint)
         canvas.drawDebugVec(this.pos, turretToEnemy, length = 1f)
     }
 }

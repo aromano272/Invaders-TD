@@ -22,6 +22,8 @@ class BuildableEntity(
     height = height,
 ) {
 
+    var selected: Boolean = false
+
     private val paint = Paint().apply {
         style = Paint.Style.FILL
         color = Color.parseColor("#FFF4BD")
@@ -32,11 +34,20 @@ class BuildableEntity(
         color = Color.parseColor("#964B00")
     }
 
+    private val paintSelected = Paint().apply {
+        style = Paint.Style.STROKE
+        color = Color.GREEN
+        strokeWidth = 6f
+    }
+
     override fun update(deltaTime: Int) {
     }
 
     override fun render(canvas: Canvas) {
         canvas.drawRect(hitbox, paint2)
         canvas.drawRect(hitbox.scale(0.9f), paint)
+        if (selected) {
+            canvas.drawRect(hitbox, paintSelected)
+        }
     }
 }

@@ -11,7 +11,7 @@ enum class Level(
         gameboard = """
             ###########
             #o        #
-            #□□□□□□#t #
+            #□□□□□□#□ #
             #         #
             # □□#□□□□##
             #         #
@@ -21,7 +21,7 @@ enum class Level(
             #        x#
             ###########
         """.trimIndent(),
-        waves = (0..20).map { number -> TEST_WAVE(1 + (number / 10f)) },
+        waves = (0..20).map { number -> TEST_WAVE(1 + (number / 1f)) },
     ),
 
     TWO(
@@ -38,7 +38,7 @@ enum class Level(
             #        x#
             ###########
         """.trimIndent(),
-        waves = (0..2).map { number -> TEST_WAVE(1 + (number / 10f)) },
+        waves = (0..2).map { number -> TEST_WAVE(1 + (number / 1f)) },
     ),
 }
 

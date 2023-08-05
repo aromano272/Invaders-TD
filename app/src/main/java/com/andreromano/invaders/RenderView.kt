@@ -3,6 +3,8 @@ package com.andreromano.invaders
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.view.MotionEvent
+import android.view.MotionEvent.ACTION_DOWN
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.andreromano.invaders.extensions.round
@@ -67,6 +69,15 @@ class RenderView @JvmOverloads constructor(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         game.sceneSizeChanged(w, h)
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.action != ACTION_DOWN) return false
+
+        println("x: ${event.x}, y: ${event.y}")
+        game.onViewEvent(Game.ViewEvent.ScreenClicked(event.x, event.y))
+
+        return true
     }
 
     private var frameCount: Long = 0
