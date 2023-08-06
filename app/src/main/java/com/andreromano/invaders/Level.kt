@@ -5,6 +5,7 @@ import kotlin.math.roundToInt
 enum class Level(
     val gameboard: String,
     val waves: List<Wave>,
+    val startingMoney: Int,
 ) {
 
     ONE(
@@ -21,7 +22,8 @@ enum class Level(
             #        x#
             ###########
         """.trimIndent(),
-        waves = (0..20).map { number -> TEST_WAVE(1 + (number / 1f)) },
+        waves = (0..200).map { number -> TEST_WAVE(1 + (number / 1f)) },
+        startingMoney = 200,
     ),
 
     TWO(
@@ -39,20 +41,21 @@ enum class Level(
             ###########
         """.trimIndent(),
         waves = (0..2).map { number -> TEST_WAVE(1 + (number / 1f)) },
+        startingMoney = 200,
     ),
 }
 
 private fun TEST_WAVE(scale: Float) = Wave(
     enemyHealth = (100 * scale).roundToInt(),
-    enemySpeed = 3,
-    enemyCount = 30,
-    enemySpawnDelay = 750,
+    enemySpeed = 3f,
+    enemyCount = 50,
+    enemySpawnDelay = 300,
     enemyMoney = (10 * scale).roundToInt(),
 )
 
 data class Wave(
     val enemyHealth: Int,
-    val enemySpeed: Int,
+    val enemySpeed: Float,
     val enemyCount: Int,
     val enemySpawnDelay: Int,
     val enemyMoney: Int,

@@ -17,7 +17,7 @@ class EnemyEntity(
     width: Int,
     height: Int,
     private val health: Int,
-    private val speed: Int,
+    private val speed: Float,
     val money: Int,
     private val path: List<PathSegment>
 ) : Entity(

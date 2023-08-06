@@ -74,7 +74,6 @@ class RenderView @JvmOverloads constructor(
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action != ACTION_DOWN) return false
 
-        println("x: ${event.x}, y: ${event.y}")
         game.onViewEvent(Game.ViewEvent.ScreenClicked(event.x, event.y))
 
         return true

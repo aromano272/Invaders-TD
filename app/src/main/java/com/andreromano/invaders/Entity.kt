@@ -32,6 +32,10 @@ abstract class Entity(
     abstract fun update(deltaTime: Int)
     abstract fun render(canvas: Canvas)
 
+    protected fun onClick(callback: () -> Boolean) {
+        ClickListenerRegistry.register(this, callback)
+    }
+
 }
 
 data class Position(

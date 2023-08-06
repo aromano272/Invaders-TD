@@ -46,6 +46,8 @@ class BulletEntity(
 
         val newPos = pos + (movDirNorm * moveAmount)
 
+        // we could instead do `val distanceToEnemy = posDifferenceToEnemy.magnitude` and compare against moveAmount
+        // but the .magnitude seems more expensive than these if's
         var collided = false
         if (movDirNorm.x > 0 && newPos.x >= enemy.pos.x) {
             newPos.x = enemy.pos.x
