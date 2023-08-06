@@ -32,8 +32,16 @@ abstract class Entity(
     abstract fun update(deltaTime: Int)
     abstract fun render(canvas: Canvas)
 
+    private var clickRegistered = false
     protected fun onClick(callback: () -> Boolean) {
+        clickRegistered = true
         ClickListenerRegistry.register(this, callback)
+    }
+
+    fun destroy() {
+        if (clickRegistered) {
+            ClickListenerRegistry.remove(this)
+        }
     }
 
 }

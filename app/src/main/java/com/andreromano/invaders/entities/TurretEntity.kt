@@ -3,12 +3,13 @@ package com.andreromano.invaders.entities
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import androidx.core.graphics.toRectF
+import android.graphics.RectF
 import com.andreromano.invaders.Entity
 import com.andreromano.invaders.GameState
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.drawDebugVec
 import com.andreromano.invaders.extensions.scale
+import com.andreromano.invaders.extensions.toPx
 
 class TurretEntity(
     pos: Vec2F,
@@ -16,7 +17,7 @@ class TurretEntity(
     tileY: Int,
     width: Int,
     height: Int,
-    val spec: TurretSpec,
+    spec: TurretSpec,
     private val spawnBullet: (BulletEntity) -> Unit
 ) : Entity(
     pos = pos,
@@ -25,6 +26,18 @@ class TurretEntity(
     width = width,
     height = height
 ) {
+    private val upgradeSpec: UpgradeSpec = spec.upgradeSpec
+    private val isSpreader = spec == TurretSpec.SPREADER
+
+    var currShootDamage = spec.shootDamage
+    var currShootDelay = spec.shootDelay
+    var totalMoneySpent = spec.cost
+    var upgradeCost: Int = spec.cost
+    val sellMoney: Int
+        get() = (totalMoneySpent * 0.8f).toInt()
+    var currRangeRadiusToWidthFactor = spec.rangeRadiusToWidthFactor
+
+    var currLevel: Int = 1
 
     private var bulletSpawnDelay = 0
 
@@ -33,6 +46,11 @@ class TurretEntity(
     private val paint = Paint().apply {
         style = Paint.Style.FILL
         color = spec.color
+    }
+
+    private val paintUpgradeLevel = Paint().apply {
+        style = Paint.Style.FILL
+        color = Color.parseColor("#FFD700")
     }
 
     private val radiusPaint = Paint().apply {
@@ -44,10 +62,29 @@ class TurretEntity(
     var enemyPos: Vec2F = Vec2F.zero()
     var turretToEnemy: Vec2F = Vec2F.zero()
 
+    fun upgrade() {
+        if (currLevel >= upgradeSpec.maxLevel) return
+        if (GameState.currMoney < upgradeCost) return
+
+        GameState.currMoney -= upgradeCost
+        currShootDamage = (currShootDamage * upgradeSpec.shootDamageMultiplier).toInt()
+        currShootDelay = (currShootDelay * upgradeSpec.shootDelayMultiplier).toInt()
+        totalMoneySpent += upgradeCost
+        currRangeRadiusToWidthFactor *= upgradeSpec.rangeRadiusToWidthFactorMultiplier
+        upgradeCost = (upgradeCost * upgradeSpec.upgradeCostMultiplier).toInt()
+        currLevel++
+    }
+
+    fun sell() {
+        GameState.currMoney += sellMoney
+        GameState.entitiesMap[tileY][tileX] = BuildableEntity(pos, tileX, tileY, width, height)
+        destroy()
+    }
+
     override fun update(deltaTime: Int) {
         bulletSpawnDelay -= deltaTime
         if (bulletSpawnDelay > 0) return
-        bulletSpawnDelay = spec.shootDelay
+        bulletSpawnDelay = currShootDelay
 
         val enemies = GameState.enemyEntities
         val enemiesWithinRange = enemies.filter { enemy ->
@@ -63,11 +100,11 @@ class TurretEntity(
             GameState.enemyEntities.find { it.id == id }
         }
 
-        if (spec == TurretSpec.SPREADER) {
-            val targetEnemies = enemiesWithinRange.shuffled().take(4)
+        if (isSpreader) {
+            val targetEnemies = enemiesWithinRange.shuffled().take(4 )
 
             targetEnemies.forEach { enemy ->
-                val bullet = BulletEntity(pos, 0, 0, width, height, spec.shootDamage, enemy.id, 10, getEnemyById)
+                val bullet = BulletEntity(pos, 0, 0, width, height, currShootDamage, enemy.id, 10, getEnemyById)
                 spawnBullet(bullet)
             }
         } else {
@@ -75,14 +112,25 @@ class TurretEntity(
             // find the first enemy within turret range
             val targetEnemy = enemiesWithinRange.first()
 
-            val bullet = BulletEntity(pos, 0, 0, width, height, spec.shootDamage, targetEnemy.id, 10, getEnemyById)
+            val bullet = BulletEntity(pos, 0, 0, width, height, currShootDamage, targetEnemy.id, 10, getEnemyById)
             spawnBullet(bullet)
         }
     }
 
     override fun render(canvas: Canvas) {
         canvas.drawOval(hitbox.scale(0.60f), paint)
-        canvas.drawOval(hitbox.scale(spec.rangeRadiusToWidthFactor * 2), radiusPaint)
+        canvas.drawOval(hitbox.scale(currRangeRadiusToWidthFactor * 2), radiusPaint)
+        repeat(currLevel - 1) { index ->
+            val width = width / 10
+            val height = width
+            val padding = width
+            val left = hitbox.left + padding + (width + padding) * index
+            val top = hitbox.top + padding
+            canvas.drawRect(
+                RectF(left, top, left + width, top + height),
+                paintUpgradeLevel
+            )
+        }
         canvas.drawDebugVec(this.pos, turretToEnemy, length = 1f)
     }
 }

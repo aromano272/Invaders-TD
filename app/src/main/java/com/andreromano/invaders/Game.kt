@@ -92,10 +92,11 @@ class Game {
         color = Color.YELLOW
     }
 
-    private val textPaint = Paint().apply {
+    private val debugTurretTextPaint = Paint().apply {
         style = Paint.Style.FILL
         textSize = 16f.toPx
-        color = Color.WHITE
+        typeface = Typeface.DEFAULT_BOLD
+        color = Color.BLACK
     }
 
     private val boldTextPaint = Paint().apply {
@@ -315,7 +316,7 @@ class Game {
             Vec2F(screenWidth / 2f, screenHeight - 200 / 2f),
             0, 0, screenWidth, 200,
             spawnTurret = { turret ->
-                GameState.currMoney -= turret.spec.cost
+                GameState.currMoney -= turret.totalMoneySpent
                 GameState.entitiesMap[turret.tileY][turret.tileX] = turret
             },
             spawnBullet = { bullet -> GameState.bulletEntities.add(bullet) }
@@ -365,6 +366,17 @@ class Game {
     }
 
     fun drawDebug(canvas: Canvas) {
+        (GameState.selectedEntity as? TurretEntity)?.let {
+            listOf(
+                "currShootDamage" to it.currShootDamage,
+                "currShootDelay" to it.currShootDelay,
+                "totalMoneySpent" to it.totalMoneySpent,
+                "currRangeRadiusToWidthFactor" to it.currRangeRadiusToWidthFactor,
+                "currLevel" to it.currLevel,
+            ).forEachIndexed { index, (key, value) ->
+                canvas.drawText("$key: $value", it.hitbox.left, it.hitbox.bottom + 40 + debugTurretTextPaint.textSize * index, debugTurretTextPaint)
+            }
+        }
     }
 
     sealed class ViewEvent {

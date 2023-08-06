@@ -3,9 +3,11 @@ package com.andreromano.invaders.entities
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Typeface
 import com.andreromano.invaders.Entity
 import com.andreromano.invaders.GameState
 import com.andreromano.invaders.Vec2F
+import com.andreromano.invaders.extensions.toPx
 
 class BottomMenuEntity(
     pos: Vec2F,
@@ -37,8 +39,24 @@ class BottomMenuEntity(
         )
     }
 
-    private var selectedTurretEntity: Entity? = null
-    private var turretSelectedEntities = listOf<TurretSelectedMenuItemEntity>()
+    private var turretSelectedEntities = run {
+        val itemWidth = height
+
+        val itemCount = 2
+        val x = width - (itemWidth / 2f) - itemWidth * (itemCount - 1)
+        val startPos = Vec2F(x, pos.y)
+
+        listOf(
+            TurretSelectedMenuItemEntity(
+                startPos, 0, 0,
+                itemWidth, height, true
+            ),
+            TurretSelectedMenuItemEntity(
+                startPos + Vec2F(itemWidth.toFloat(), 0f), 0, 0,
+                itemWidth, height, false
+            ),
+        )
+    }
 
     private val paint = Paint().apply {
         style = Paint.Style.FILL
@@ -53,34 +71,11 @@ class BottomMenuEntity(
                 entity.update(deltaTime)
             }
             is TurretEntity -> {
-                val selectedTurretEntityChanged = this.selectedTurretEntity != selectedEntity
-                this.selectedTurretEntity = selectedEntity
-                if (selectedTurretEntityChanged) {
-                    recreateTurretSelectedEntities(selectedEntity)
-                }
                 turretSelectedEntities.forEach { entity ->
                     entity.update(deltaTime)
                 }
             }
         }
-    }
-
-    private fun recreateTurretSelectedEntities(entity: TurretEntity) {
-        val itemWidth = height
-
-        val itemCount = 2
-        val x = width - (itemWidth / 2f) - itemWidth * (itemCount - 1)
-        val startPos = Vec2F(x, pos.y)
-        turretSelectedEntities = listOf(
-            TurretSelectedMenuItemEntity(
-                startPos, 0, 0,
-                itemWidth, height, entity.spec
-            ),
-            TurretSelectedMenuItemEntity(
-                startPos + Vec2F(itemWidth.toFloat(), 0f), 0, 0,
-                itemWidth, height, entity.spec
-            ),
-        )
     }
 
     override fun render(canvas: Canvas) {
@@ -166,7 +161,7 @@ class TurretSelectedMenuItemEntity(
     tileY: Int,
     width: Int,
     height: Int,
-    private val spec: TurretSpec,
+    private val isMenuItemUpgrade: Boolean
 ) : Entity(
     pos = pos,
     tileX = tileX,
@@ -175,7 +170,9 @@ class TurretSelectedMenuItemEntity(
     height = height,
 ) {
 
-    private var enabled = false
+    private var enabled = true
+
+    private var entity: TurretEntity? = null
 
     private val paint = Paint().apply {
         style = Paint.Style.FILL
@@ -187,25 +184,47 @@ class TurretSelectedMenuItemEntity(
         this.color = Color.parseColor("#CC000000")
     }
 
+    private val textPaint = Paint().apply {
+        style = Paint.Style.FILL
+        textSize = 16f.toPx
+        typeface = Typeface.DEFAULT_BOLD
+        color = Color.WHITE
+    }
+
+
     init {
         onClick {
+            if (!enabled) return@onClick false
+            val entity = GameState.selectedEntity as? TurretEntity ?: return@onClick false
+            if (isMenuItemUpgrade) {
+                entity.upgrade()
+            } else {
+                entity.sell()
+            }
             true
         }
     }
 
     override fun update(deltaTime: Int) {
-        val upgradeCost = when (spec) {
-            TurretSpec.FAST -> spec.cost * 1.1f
-            TurretSpec.STRONG -> spec.cost * 1.1f
-            TurretSpec.SPREADER -> spec.cost * 1.1f
+        entity = (GameState.selectedEntity as? TurretEntity)
+        val entity = entity ?: return
+        if (isMenuItemUpgrade) {
+            enabled = GameState.currMoney >= entity.upgradeCost
         }
-        enabled = GameState.currMoney >= upgradeCost
     }
 
     override fun render(canvas: Canvas) {
+        val entity = entity ?: return
+
         canvas.drawRect(hitbox, paint)
         if (!enabled) {
             canvas.drawRect(hitbox, paintDisabled)
+        }
+
+        if (isMenuItemUpgrade) {
+            canvas.drawText("${entity.upgradeCost}", hitbox.left, pos.y, textPaint)
+        } else {
+            canvas.drawText("${entity.sellMoney}", hitbox.left, pos.y, textPaint)
         }
     }
 }
