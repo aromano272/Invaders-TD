@@ -3,7 +3,6 @@ package com.andreromano.invaders.entities
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import androidx.core.graphics.toRectF
 import com.andreromano.invaders.Entity
 import com.andreromano.invaders.Position
 import com.andreromano.invaders.Vec2F
@@ -19,7 +18,7 @@ class EnemyEntity(
     private val health: Int,
     private val speed: Float,
     val money: Int,
-    private val path: List<PathSegment>
+    private val path: List<Waypoint>
 ) : Entity(
     pos = pos,
     tileX = tileX,
@@ -38,8 +37,7 @@ class EnemyEntity(
 
     private var currHealth = health
 
-    private var currentPathSegment: Int = 0
-    private var currDirection: Vec2F = Vec2F.zero()
+    private var currentWaypoint: Int = 0
 
     private val paint = Paint().apply {
         style = Paint.Style.FILL
@@ -65,11 +63,11 @@ class EnemyEntity(
 
     override fun update(deltaTime: Int) {
         // Reached end of segment
-        if (currentPathSegment == path.size) return
+        if (currentWaypoint == path.size) return
 
         val moveAmount = (speed * deltaTime) / 5f
 
-        val segment = path[currentPathSegment]
+        val segment = path[currentWaypoint]
         val posDifferenceToTarget = segment.end.pos - pos
         val movementDirectionNorm = posDifferenceToTarget.normalized()
         val newPos = pos + (movementDirectionNorm * moveAmount)
@@ -96,10 +94,10 @@ class EnemyEntity(
         }
 
         if (reachedSegmentEnd) {
-            currentPathSegment++
+            currentWaypoint++
         }
 
-        if (currentPathSegment == path.size) {
+        if (currentWaypoint == path.size) {
             escaped = true
         }
 
@@ -126,7 +124,7 @@ class EnemyEntity(
     }
 }
 
-data class PathSegment(
+data class Waypoint(
     val start: Position,
     val end: Position
 )

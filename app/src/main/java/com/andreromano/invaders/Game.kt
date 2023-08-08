@@ -8,7 +8,7 @@ import java.lang.Exception
 object GameState {
     var currentLevelIndex: Int = 0
     var currentLevel: Level = Level.ONE
-    lateinit var currentLevelPath: List<PathSegment>
+    lateinit var currentLevelPath: List<Waypoint>
 
     lateinit var entitiesMap: Array<Array<Entity?>>
 
@@ -350,22 +350,48 @@ class Game {
             pathEntities += entity
         }
 
-        var prevPosition: Position? = null
-        val pathSegments = mutableListOf<PathSegment>()
+        val waypoints = mutableListOf<Waypoint>()
 
-        pathEntities.forEach { entity ->
-            val currPosition = entity.currentPos()
-            val startPosition = prevPosition
-            if (startPosition != null) {
-                pathSegments += PathSegment(startPosition, currPosition)
+        var currStartPosition: Position = pathEntities[0].currentPos()
+        var currEndPosition: Position = pathEntities[1].currentPos()
+        var currDirection = (currEndPosition.pos - currStartPosition.pos).normalized()
+        pathEntities.drop(2).forEach { entity ->
+            val newEndPosition = entity.currentPos()
+            val newDirection = (newEndPosition.pos - currEndPosition.pos).normalized()
+            val isSameDirection = dot(currDirection, newDirection) == 1f
+            if (isSameDirection) {
+                currEndPosition = newEndPosition
+            } else {
+                waypoints += Waypoint(currStartPosition, currEndPosition)
+                currStartPosition = currEndPosition
+                currEndPosition = newEndPosition
+                currDirection = newDirection
             }
-            prevPosition = currPosition
         }
+        waypoints += Waypoint(currStartPosition, currEndPosition)
 
-        GameState.currentLevelPath = pathSegments
+        GameState.currentLevelPath = waypoints
     }
 
     fun drawDebug(canvas: Canvas) {
+        GameState.currentLevelPath.forEach { waypoint ->
+            val rectWidth = 20f
+            val startRect = RectF(
+                waypoint.start.pos.x - rectWidth / 2f,
+                waypoint.start.pos.y - rectWidth / 2f,
+                waypoint.start.pos.x + rectWidth / 2f,
+                waypoint.start.pos.y + rectWidth / 2f,
+            )
+            val endRect = RectF(
+                waypoint.end.pos.x - rectWidth / 2f,
+                waypoint.end.pos.y - rectWidth / 2f,
+                waypoint.end.pos.x + rectWidth / 2f,
+                waypoint.end.pos.y + rectWidth / 2f,
+            )
+            canvas.drawRect(startRect, yellowPaint)
+            canvas.drawRect(endRect, yellowPaint)
+        }
+
         (GameState.selectedEntity as? TurretEntity)?.let {
             listOf(
                 "currShootDamage" to it.currShootDamage,
