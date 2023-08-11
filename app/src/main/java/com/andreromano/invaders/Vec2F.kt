@@ -44,3 +44,10 @@ fun dot(a: Vec2F, b: Vec2F): Float {
     check(a.magnitude == 1f || b.magnitude == 1f)
     return a.x * b.x + a.y * b.y
 }
+
+fun reflectByNormal(ray: Vec2F, normal: Vec2F): Vec2F {
+    val dotProduct = dot(normal, ray)
+    val rayProjectedOntoNormal = normal * dotProduct
+    val result = ray - rayProjectedOntoNormal * 2f
+    return result
+}
