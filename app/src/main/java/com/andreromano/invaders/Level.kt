@@ -49,7 +49,7 @@ private fun TEST_WAVE(scale: Float) = Wave(
     enemyHealth = (100 * scale).roundToInt(),
     enemySpeed = 3f,
     enemyCount = 50,
-    enemySpawnDelay = 300,
+    enemySpawnDelay = 150,
     enemyMoney = (10 * scale).roundToInt(),
 )
 

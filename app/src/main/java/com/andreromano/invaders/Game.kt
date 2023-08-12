@@ -109,7 +109,6 @@ class Game {
     private val deferred: MutableList<() -> Unit> = mutableListOf()
 
     fun updateAndRender(canvas: Canvas, deltaTime: Int) {
-        currTime += deltaTime
         GameState.entitiesMap.forEach { rows ->
             rows.forEach { entity ->
                 entity?.update(deltaTime)
@@ -130,7 +129,7 @@ class Game {
             canvas.drawRect(it.hitbox, paintSelected)
         }
 
-        updateGameState(deltaTime)
+        updateGameState(deltaTime, canvas)
 
         clearDestroyedEntities()
 
@@ -158,27 +157,41 @@ class Game {
     private var spawnedCount = 0
     private var nextSpawnTime = 0L
 
-    fun updateGameState(deltaTime: Int) {
-        spawnEnemyIfNeeded(deltaTime)
+    fun updateGameState(deltaTime: Int, canvas: Canvas) {
+        spawnEnemyIfNeeded(deltaTime, canvas)
         spawnNextWaveIfNeeded(deltaTime)
         advanceLevelIfNeeded(deltaTime)
 
         currTime += deltaTime
     }
 
-    private fun spawnEnemyIfNeeded(deltaTime: Int) {
+    private fun spawnEnemyIfNeeded(deltaTime: Int, canvas: Canvas) {
         val wave = GameState.currentLevel.waves[currentWave]
         if (spawnedCount == wave.enemyCount) return
 
         val newTime = currTime + deltaTime
-        if (newTime > nextSpawnTime) {
+
+        // nextspawn 1000 newtime 970, timeDiff -30
+        // nextspawn 1000 newtime 1050, timeDiff 50
+
+
+        val timeDiff = (newTime - nextSpawnTime).toInt()
+
+
+        println("currTime: $currTime newTime: $newTime deltaTime: $deltaTime nextSpawnTime: $nextSpawnTime timeDiff: $timeDiff spawn: ${timeDiff >= 0}")
+
+        if (timeDiff >= 0) {
             with (startEntity) {
                 val enemy = EnemyEntity(pos, tileX, tileY, width, height,
                     wave.enemyHealth, wave.enemySpeed, wave.enemyMoney, GameState.currentLevelPath)
                 GameState.enemyEntities += enemy
+                enemy.update(timeDiff)
+                enemy.render(canvas)
 
                 spawnedCount++
                 nextSpawnTime += wave.enemySpawnDelay
+                // nextspawntime 0 timedelta 16
+                // nextspawntime 50
             }
         }
     }
