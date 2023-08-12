@@ -9,7 +9,6 @@ import com.andreromano.invaders.GameState
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.drawDebugVec
 import com.andreromano.invaders.extensions.scale
-import com.andreromano.invaders.extensions.toPx
 
 class TurretEntity(
     pos: Vec2F,
@@ -88,6 +87,8 @@ class TurretEntity(
 
         val enemies = GameState.enemyEntities
         val enemiesWithinRange = enemies.filter { enemy ->
+            if (enemy.willDieFromIncomingDamage()) return@filter false
+
             enemyPos = enemy.pos
             turretToEnemy = enemy.pos - this.pos
             val distanceToTurret = turretToEnemy.magnitude
@@ -105,14 +106,14 @@ class TurretEntity(
 
             targetEnemies.forEach { enemy ->
                 val bullet = BulletEntity(pos, 0, 0, width, height, currShootDamage, enemy.id, 10, getEnemyById)
+                enemy.addIncomingDamage(currShootDamage)
                 spawnBullet(bullet)
             }
         } else {
-            // TODO(aromano): If there's already a bullet inflight that's gonna kill an enemy, we shouldn't fire more bullets to that enemy
-            // find the first enemy within turret range
-            val targetEnemy = enemiesWithinRange.first()
+            val enemy = enemiesWithinRange.first()
 
-            val bullet = BulletEntity(pos, 0, 0, width, height, currShootDamage, targetEnemy.id, 10, getEnemyById)
+            val bullet = BulletEntity(pos, 0, 0, width, height, currShootDamage, enemy.id, 10, getEnemyById)
+            enemy.addIncomingDamage(currShootDamage)
             spawnBullet(bullet)
         }
     }

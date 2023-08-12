@@ -36,6 +36,7 @@ class EnemyEntity(
     var withinTurretRange = false
 
     private var currHealth = health
+    private var currIncomingDamage = 0
 
     private var currentWaypoint: Int = 0
 
@@ -106,7 +107,14 @@ class EnemyEntity(
         }
     }
 
+    fun addIncomingDamage(damage: Int) {
+        currIncomingDamage += damage
+    }
+
+    fun willDieFromIncomingDamage() = currIncomingDamage >= currHealth
+
     fun wasHit(damage: Int) {
+        currIncomingDamage -= damage
         currHealth -= damage / 2
         if (currHealth <= 0) killed = true
     }
