@@ -170,16 +170,7 @@ class Game {
         if (spawnedCount == wave.enemyCount) return
 
         val newTime = currTime + deltaTime
-
-        // nextspawn 1000 newtime 970, timeDiff -30
-        // nextspawn 1000 newtime 1050, timeDiff 50
-
-
         val timeDiff = (newTime - nextSpawnTime).toInt()
-
-
-        println("currTime: $currTime newTime: $newTime deltaTime: $deltaTime nextSpawnTime: $nextSpawnTime timeDiff: $timeDiff spawn: ${timeDiff >= 0}")
-
         if (timeDiff >= 0) {
             with (startEntity) {
                 val enemy = EnemyEntity(pos, tileX, tileY, width, height,
@@ -190,8 +181,6 @@ class Game {
 
                 spawnedCount++
                 nextSpawnTime += wave.enemySpawnDelay
-                // nextspawntime 0 timedelta 16
-                // nextspawntime 50
             }
         }
     }

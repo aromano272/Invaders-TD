@@ -65,43 +65,31 @@ class EnemyEntity(
         // Reached end of segment
         if (currentWaypoint == path.size) return
 
-        val moveAmount = (speed * deltaTime) / 5f
+        val moveAmount = speed * deltaTime
 
         val segment = path[currentWaypoint]
         val posDifferenceToTarget = segment.end.pos - pos
+        val distanceToTarget = posDifferenceToTarget.magnitude
         val movementDirectionNorm = posDifferenceToTarget.normalized()
         val newPos = pos + (movementDirectionNorm * moveAmount)
+        val overshootDistance = moveAmount - distanceToTarget
 
-        // TODO(aromano): We're currently handling the case where the newPos would overshoot the segment.end.pos by clamping newPos to the end value
-        //                however we should be using the overshoot distance to travel towards the next segment
-
-        var reachedSegmentEnd = false
-        if (movementDirectionNorm.x > 0 && newPos.x >= segment.end.pos.x) {
-            newPos.x = segment.end.pos.x
-            reachedSegmentEnd = true
-        }
-        if (movementDirectionNorm.y > 0 && newPos.y >= segment.end.pos.y) {
-            newPos.y = segment.end.pos.y
-            reachedSegmentEnd = true
-        }
-        if (movementDirectionNorm.x < 0 && newPos.x <= segment.end.pos.x) {
-            newPos.x = segment.end.pos.x
-            reachedSegmentEnd = true
-        }
-        if (movementDirectionNorm.y < 0 && newPos.y <= segment.end.pos.y) {
-            newPos.y = segment.end.pos.y
-            reachedSegmentEnd = true
-        }
-
-        if (reachedSegmentEnd) {
+        // The newPos overshoot the target, so the newPos will be at the target and we'll call update(time) with the remaining time after the initial move
+        if (overshootDistance > 0) {
+            // Assuming movement speed is linear
+            // Swapping the terms of the moveAmount formula to get the time with the overshootDistance
+            val remainingMoveTime = overshootDistance / speed
+            pos = segment.end.pos
             currentWaypoint++
-        }
 
-        if (currentWaypoint == path.size) {
-            escaped = true
+            if (currentWaypoint == path.size) {
+                escaped = true
+            } else {
+                update(remainingMoveTime.toInt())
+            }
+        } else {
+            pos = newPos
         }
-
-        pos = newPos
     }
 
     override fun render(canvas: Canvas) {
