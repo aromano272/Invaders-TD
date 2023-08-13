@@ -39,7 +39,7 @@ class BottomMenuEntity(
         )
     }
 
-    private var turretSelectedEntities = run {
+    private val turretSelectedEntities = run {
         val itemWidth = height
 
         val itemCount = 2
@@ -57,6 +57,8 @@ class BottomMenuEntity(
             ),
         )
     }
+    private val turretSelectedUpgradeEntity = turretSelectedEntities[0]
+    private val turretSelectedSellEntity = turretSelectedEntities[1]
 
     private val paint = Paint().apply {
         style = Paint.Style.FILL
@@ -71,6 +73,8 @@ class BottomMenuEntity(
                 entity.update(deltaTime)
             }
             is TurretEntity -> {
+                if (!selectedEntity.isMaxLevel) turretSelectedUpgradeEntity.update(deltaTime)
+                turretSelectedSellEntity.update(deltaTime)
                 turretSelectedEntities.forEach { entity ->
                     entity.update(deltaTime)
                 }
@@ -86,8 +90,9 @@ class BottomMenuEntity(
              is BuildableEntity -> buildTurretEntities.forEach { entity ->
                  entity.render(canvas)
              }
-             is TurretEntity -> turretSelectedEntities.forEach { entity ->
-                 entity.render(canvas)
+             is TurretEntity -> {
+                 if (!selectedEntity.isMaxLevel) turretSelectedUpgradeEntity.render(canvas)
+                 turretSelectedSellEntity.render(canvas)
              }
         }
     }

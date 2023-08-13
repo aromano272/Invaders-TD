@@ -37,6 +37,8 @@ class TurretEntity(
     var currRangeRadiusToWidthFactor = spec.rangeRadiusToWidthFactor
 
     var currLevel: Int = 1
+    val isMaxLevel: Boolean
+        get() = currLevel >= upgradeSpec.maxLevel
 
     private var bulletSpawnDelay = 0
 
@@ -62,7 +64,7 @@ class TurretEntity(
     var turretToEnemy: Vec2F = Vec2F.zero()
 
     fun upgrade() {
-        if (currLevel >= upgradeSpec.maxLevel) return
+        if (isMaxLevel) return
         if (GameState.currMoney < upgradeCost) return
 
         GameState.currMoney -= upgradeCost
