@@ -27,6 +27,7 @@ object GameState {
         }
 
     var bottomMenuEntity: BottomMenuEntity? = null
+    var gameSpeedEntity: GameSpeedEntity? = null
 }
 
 class Game {
@@ -109,6 +110,7 @@ class Game {
     private val deferred: MutableList<() -> Unit> = mutableListOf()
 
     fun updateAndRender(canvas: Canvas, deltaTime: Int) {
+        val deltaTime = (deltaTime * (GameState.gameSpeedEntity?.currMultiplier ?: 1f)).toInt()
         GameState.entitiesMap.forEach { rows ->
             rows.forEach { entity ->
                 entity?.update(deltaTime)
@@ -128,6 +130,8 @@ class Game {
         GameState.selectedEntity?.let {
             canvas.drawRect(it.hitbox, paintSelected)
         }
+        GameState.gameSpeedEntity?.update(deltaTime)
+        GameState.gameSpeedEntity?.render(canvas)
 
         updateGameState(deltaTime, canvas)
 
@@ -322,6 +326,18 @@ class Game {
                 GameState.entitiesMap[turret.tileY][turret.tileX] = turret
             },
             spawnBullet = { bullet -> GameState.bulletEntities.add(bullet) }
+        )
+        val gameSpeedTileX = mapTileWidth - 1
+        val gameSpeedTileY = 0
+        GameState.gameSpeedEntity = GameSpeedEntity(
+            Vec2F(
+                x = getScreenXFromTileX(gameSpeedTileX).toFloat(),
+                y = getScreenYFromTileY(gameSpeedTileY).toFloat(),
+            ),
+            gameSpeedTileX,
+            gameSpeedTileY,
+            entityWidth,
+            entityHeight
         )
     }
 
