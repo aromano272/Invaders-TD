@@ -44,6 +44,8 @@ abstract class Entity(
         }
     }
 
+    fun Vec2F.toWorld(): Vec2F = localToWorld(this, pos)
+
 }
 
 data class Position(

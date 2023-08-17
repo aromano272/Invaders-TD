@@ -7,6 +7,7 @@ import android.graphics.RectF
 import com.andreromano.invaders.Entity
 import com.andreromano.invaders.GameState
 import com.andreromano.invaders.Vec2F
+import com.andreromano.invaders.drawDebugRect
 import com.andreromano.invaders.drawDebugVec
 import com.andreromano.invaders.extensions.scale
 

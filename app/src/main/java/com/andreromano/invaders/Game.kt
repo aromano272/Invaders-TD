@@ -451,3 +451,23 @@ fun Canvas.drawDebugVec(
             strokeWidth = 4f
         })
 }
+
+fun Canvas.drawDebugRect(
+    center: Vec2F,
+    width: Float,
+    color: Int = Color.YELLOW
+) {
+    val rect = RectF(
+        center.x - (width / 2f),
+        center.y - (width / 2f),
+        center.x + (width / 2f),
+        center.y + (width / 2f),
+    )
+    drawRect(
+        rect,
+        Paint().apply {
+            style = Paint.Style.FILL
+            this.color = color
+        }
+    )
+}
