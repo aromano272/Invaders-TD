@@ -1,8 +1,18 @@
 package com.andreromano.invaders
 
 import android.graphics.*
-import com.andreromano.invaders.entities.*
 import com.andreromano.invaders.extensions.toPx
+import com.andreromano.invaders.scenes.level.entities.BottomMenuEntity
+import com.andreromano.invaders.scenes.level.entities.BuildableEntity
+import com.andreromano.invaders.scenes.level.entities.BulletEntity
+import com.andreromano.invaders.scenes.level.entities.EndEntity
+import com.andreromano.invaders.scenes.level.entities.EnemyEntity
+import com.andreromano.invaders.scenes.level.entities.GameSpeedEntity
+import com.andreromano.invaders.scenes.level.entities.PathEntity
+import com.andreromano.invaders.scenes.level.entities.StartEntity
+import com.andreromano.invaders.scenes.level.entities.TurretEntity
+import com.andreromano.invaders.scenes.level.entities.WallEntity
+import com.andreromano.invaders.scenes.level.entities.Waypoint
 import java.lang.Exception
 
 object GameState {

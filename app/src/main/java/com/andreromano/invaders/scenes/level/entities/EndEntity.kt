@@ -1,13 +1,12 @@
-package com.andreromano.invaders.entities
+package com.andreromano.invaders.scenes.level.entities
 
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import androidx.core.graphics.toRectF
 import com.andreromano.invaders.Entity
 import com.andreromano.invaders.Vec2F
 
-class PathEntity(
+class EndEntity(
     pos: Vec2F,
     tileX: Int,
     tileY: Int,
@@ -23,7 +22,7 @@ class PathEntity(
 
     private val paint = Paint().apply {
         style = Paint.Style.FILL
-        color = Color.parseColor("#66605A")
+        color = Color.RED
     }
 
     override fun update(deltaTime: Int) {

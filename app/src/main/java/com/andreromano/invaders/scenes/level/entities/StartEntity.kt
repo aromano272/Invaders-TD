@@ -1,13 +1,12 @@
-package com.andreromano.invaders.entities
+package com.andreromano.invaders.scenes.level.entities
 
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import androidx.core.graphics.toRectF
 import com.andreromano.invaders.Entity
 import com.andreromano.invaders.Vec2F
 
-class EndEntity(
+class StartEntity(
     pos: Vec2F,
     tileX: Int,
     tileY: Int,
@@ -20,10 +19,9 @@ class EndEntity(
     width = width,
     height = height,
 ) {
-
     private val paint = Paint().apply {
         style = Paint.Style.FILL
-        color = Color.RED
+        color = Color.GREEN
     }
 
     override fun update(deltaTime: Int) {

@@ -1,14 +1,12 @@
-package com.andreromano.invaders.entities
+package com.andreromano.invaders.scenes.level.entities
 
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import androidx.core.graphics.toRectF
 import com.andreromano.invaders.Entity
 import com.andreromano.invaders.Vec2F
-import com.andreromano.invaders.extensions.scale
 
-class BuildableEntity(
+class PathEntity(
     pos: Vec2F,
     tileX: Int,
     tileY: Int,
@@ -24,19 +22,13 @@ class BuildableEntity(
 
     private val paint = Paint().apply {
         style = Paint.Style.FILL
-        color = Color.parseColor("#FFF4BD")
-    }
-
-    private val paint2 = Paint().apply {
-        style = Paint.Style.FILL
-        color = Color.parseColor("#964B00")
+        color = Color.parseColor("#66605A")
     }
 
     override fun update(deltaTime: Int) {
     }
 
     override fun render(canvas: Canvas) {
-        canvas.drawRect(hitbox, paint2)
-        canvas.drawRect(hitbox.scale(0.9f), paint)
+        canvas.drawRect(hitbox, paint)
     }
 }

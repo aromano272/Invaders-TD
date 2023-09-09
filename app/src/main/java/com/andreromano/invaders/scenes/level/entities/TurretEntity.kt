@@ -1,4 +1,4 @@
-package com.andreromano.invaders.entities
+package com.andreromano.invaders.scenes.level.entities
 
 import android.graphics.Canvas
 import android.graphics.Color
@@ -7,7 +7,6 @@ import android.graphics.RectF
 import com.andreromano.invaders.Entity
 import com.andreromano.invaders.GameState
 import com.andreromano.invaders.Vec2F
-import com.andreromano.invaders.drawDebugRect
 import com.andreromano.invaders.drawDebugVec
 import com.andreromano.invaders.extensions.scale
 

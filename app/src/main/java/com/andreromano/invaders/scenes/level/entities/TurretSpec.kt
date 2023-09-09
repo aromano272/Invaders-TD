@@ -1,4 +1,4 @@
-package com.andreromano.invaders.entities
+package com.andreromano.invaders.scenes.level.entities
 
 import android.graphics.Color
 
