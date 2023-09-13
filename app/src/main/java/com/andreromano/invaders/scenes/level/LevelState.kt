@@ -16,6 +16,7 @@ class LevelState(
 ) {
     lateinit var currentLevelPath: List<Waypoint>
     var currentWave: Int = 0
+    var score: Int = 0
 
     lateinit var entitiesMap: Array<Array<TiledEntity?>>
 

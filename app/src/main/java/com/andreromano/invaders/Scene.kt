@@ -2,8 +2,10 @@ package com.andreromano.invaders
 
 import android.graphics.Canvas
 
-interface Scene {
-    fun updateAndRender(canvas: Canvas, deltaTime: Int)
-    fun sceneSizeChanged(w: Int, h: Int)
-    fun onViewEvent(event: ViewEvent)
+abstract class Scene(
+    val game: Game
+) {
+    abstract fun updateAndRender(canvas: Canvas, deltaTime: Int)
+    abstract fun sceneSizeChanged()
+    abstract fun onViewEvent(event: ViewEvent)
 }

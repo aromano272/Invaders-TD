@@ -3,7 +3,7 @@ package com.andreromano.invaders.scenes.level
 import android.graphics.*
 
 import com.andreromano.invaders.ClickListenerRegistry
-import com.andreromano.invaders.GameState
+import com.andreromano.invaders.Game
 import com.andreromano.invaders.Level
 import com.andreromano.invaders.Persistence
 import com.andreromano.invaders.Scene
@@ -12,6 +12,7 @@ import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.ViewEvent
 import com.andreromano.invaders.dot
 import com.andreromano.invaders.extensions.toPx
+import com.andreromano.invaders.onClick
 import com.andreromano.invaders.scenes.intro.IntroScene
 import com.andreromano.invaders.scenes.level.entities.BottomMenuEntity
 import com.andreromano.invaders.scenes.level.entities.BuildableEntity
@@ -27,15 +28,13 @@ import com.andreromano.invaders.scenes.level.entities.Waypoint
 import java.lang.Exception
 
 class LevelScene(
+    game: Game,
     private var savedGameToLoad: SaveableLevelState?
-) : Scene {
-
-    init {
-        levelState = LevelState(savedGameToLoad?.currentLevel ?: Level.ONE)
-    }
+) : Scene(game) {
 
     private lateinit var levelStateAtStartOfWave: LevelState
 
+    private var hasLoadedLevel = false
     private var screenWidth = 0
     private var screenHeight = 0
     private var boardSceneWidth = 0
@@ -113,6 +112,10 @@ class LevelScene(
     private val deferred: MutableList<() -> Unit> = mutableListOf()
 
     override fun updateAndRender(canvas: Canvas, deltaTime: Int) {
+        if (!hasLoadedLevel) {
+            loadLevel(savedGameToLoad?.currentLevel ?: Level.ONE)
+            return
+        }
         val deltaTime = (deltaTime * (levelState.gameSpeedEntity?.currMultiplier ?: 1f)).toInt()
         levelState.entitiesMap.forEach { rows ->
             rows.forEach { entity ->
@@ -250,12 +253,12 @@ class LevelScene(
         levelState.entitiesMap[entity.tileY][entity.tileX] = null
     }
 
-    override fun sceneSizeChanged(w: Int, h: Int) {
-        require(h > w) {
+    override fun sceneSizeChanged() {
+        require(game.height > game.width) {
             "Game doesn't support landscape mode"
         }
-        screenWidth = w
-        screenHeight = h
+        screenWidth = game.width
+        screenHeight = game.height
 
         loadLevel(levelState.currentLevel)
     }
@@ -265,7 +268,7 @@ class LevelScene(
     }
 
     fun loadLevel(level: Level) {
-        score = 0
+        levelState.currentLevel = level
         val rows = level.gameboard.split("\n")
 
         mapTileWidth = rows.first().length
@@ -323,6 +326,7 @@ class LevelScene(
         walkThroughLevelAndCreatePath()
 
         levelState.bottomMenuEntity = BottomMenuEntity(
+            this,
             Vec2F(screenWidth / 2f, screenHeight - 200 / 2f),
              screenWidth, 200,
             spawnTurret = { turret ->
@@ -354,13 +358,11 @@ class LevelScene(
             gamePauseTileY,
             entityWidth,
             entityHeight,
-            onClick = { these fucking listeners are not working, think about a proper solution for this
-                Persistence.save(SaveableLevelState.from(levelStateAtStartOfWave))
-                GameState.activeScene = IntroScene()
-                GameState.activeScene.sceneSizeChanged(screenWidth, screenHeight)
-                true
-            }
-        )
+        ).onClick(this) {
+            Persistence.save(SaveableLevelState.from(levelStateAtStartOfWave))
+            game.changeScene(IntroScene(game))
+            true
+        }
 
         val savedGame = savedGameToLoad
         if (savedGame != null) {

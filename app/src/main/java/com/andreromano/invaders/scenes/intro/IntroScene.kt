@@ -6,38 +6,37 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import com.andreromano.invaders.ClickListenerRegistry
 import com.andreromano.invaders.Entity
-import com.andreromano.invaders.GameState
+import com.andreromano.invaders.Game
 import com.andreromano.invaders.Persistence
 import com.andreromano.invaders.PosMode
 import com.andreromano.invaders.Scene
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.ViewEvent
 import com.andreromano.invaders.extensions.toPx
+import com.andreromano.invaders.onClick
 import com.andreromano.invaders.scenes.intro.ColumnEntity.Companion.WRAP_CONTENT
 import com.andreromano.invaders.scenes.level.LevelScene
-import com.andreromano.invaders.scenes.level.levelState
-import com.andreromano.invaders.scenes.level.LevelState
 import com.andreromano.invaders.scenes.level.SaveableLevelState
 
-class IntroScene : Scene {
+class IntroScene(
+    game: Game,
+) : Scene(
+    game = game
+) {
 
-    private var sceneWidth = 0
-    private var sceneHeight = 0
+    private var screenWidth = game.width
+    private var screenHeight = game.height
 
     private val savedGame: SaveableLevelState? = Persistence.load()
     private val resumeButton = if (savedGame != null) {
-        ButtonEntity("Resume", Vec2F(0f, 0f)) {
-            GameState.activeScene = LevelScene(savedGame)
-            GameState.activeScene.sceneSizeChanged(sceneWidth, sceneHeight)
-            true
+        ButtonEntity("Resume", Vec2F(0f, 0f)).onClick(this) {
+            game.changeScene(LevelScene(game, savedGame))
         }
     } else {
         null
     }
-    private val newGameButton = ButtonEntity("New Game", Vec2F(0f, 0f)) {
-        GameState.activeScene = LevelScene(null)
-        GameState.activeScene.sceneSizeChanged(sceneWidth, sceneHeight)
-        true
+    private val newGameButton = ButtonEntity("New Game", Vec2F(0f, 0f)).onClick(this) {
+        game.changeScene(LevelScene(game, null))
     }
     private val column = ColumnEntity(
         Vec2F(0f, 0f),
@@ -53,10 +52,10 @@ class IntroScene : Scene {
         column.render(canvas)
     }
 
-    override fun sceneSizeChanged(w: Int, h: Int) {
-        sceneWidth = w
-        sceneHeight = h
-        column.height = h
+    override fun sceneSizeChanged() {
+        screenWidth = game.width
+        screenHeight = game.height
+        column.height = game.height
     }
 
     override fun onViewEvent(event: ViewEvent) {
@@ -120,7 +119,6 @@ class ColumnEntity(
 class ButtonEntity(
     val text: String,
     pos: Vec2F,
-    onClick: () -> Boolean,
 ) : Entity(
     pos = pos,
     width = -1,
@@ -142,7 +140,6 @@ class ButtonEntity(
     }
 
     init {
-        ClickListenerRegistry.register(this, onClick)
         val textWidth = paint.measureText(text)
         val textHeight = paint.fontMetrics.run {
             descent - ascent

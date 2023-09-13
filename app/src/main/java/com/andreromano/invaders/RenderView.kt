@@ -9,8 +9,6 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.andreromano.invaders.extensions.round
 import com.andreromano.invaders.extensions.toPx
-import com.andreromano.invaders.scenes.intro.IntroScene
-import com.andreromano.invaders.scenes.level.LevelScene
 import java.util.*
 
 
@@ -28,6 +26,19 @@ class RenderView @JvmOverloads constructor(
     private lateinit var thread: Thread
 
     private val pendingEvents = mutableListOf<ViewEvent>()
+
+    private val game: Game = object : Game {
+        override var width: Int = 0
+        override var height: Int = 0
+        override lateinit var activeScene: Scene
+
+        override fun changeScene(scene: Scene) {
+            if (!::activeScene.isInitialized) {
+                ClickListenerRegistry.remove(activeScene)
+            }
+            activeScene = scene
+        }
+    }
 
     private val textPaint = Paint().apply {
         style = Paint.Style.FILL
@@ -64,10 +75,10 @@ class RenderView @JvmOverloads constructor(
             canvas.drawRect(rect, paint)
             computeFrameStartNano = System.nanoTime()
             if (pendingEvents.isNotEmpty()) {
-                pendingEvents.forEach { event -> GameState.activeScene.onViewEvent(event) }
+                pendingEvents.forEach { event -> game.activeScene.onViewEvent(event) }
                 pendingEvents.clear()
             }
-            GameState.activeScene.updateAndRender(canvas, deltaTime.toInt())
+            game.activeScene.updateAndRender(canvas, deltaTime.toInt())
             computeFrameEndNano = System.nanoTime()
 
             drawFps(canvas)
@@ -79,7 +90,9 @@ class RenderView @JvmOverloads constructor(
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        GameState.activeScene.sceneSizeChanged(w, h)
+        game.width = w
+        game.height = h
+        game.activeScene.sceneSizeChanged()
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -170,6 +183,6 @@ class RenderView @JvmOverloads constructor(
     }
 
     fun onViewEvent(viewEvent: ViewEvent) {
-        GameState.activeScene.onViewEvent(viewEvent)
+        game.activeScene.onViewEvent(viewEvent)
     }
 }

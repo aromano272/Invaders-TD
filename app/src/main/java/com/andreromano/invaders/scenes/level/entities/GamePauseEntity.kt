@@ -5,12 +5,8 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
-import com.andreromano.invaders.Entity
-import com.andreromano.invaders.GameState
 import com.andreromano.invaders.TiledEntity
 import com.andreromano.invaders.Vec2F
-import com.andreromano.invaders.scenes.intro.IntroScene
-import com.andreromano.invaders.scenes.level.levelState
 import kotlin.math.sqrt
 
 class GamePauseEntity(
@@ -19,7 +15,6 @@ class GamePauseEntity(
     tileY: Int,
     width: Int,
     height: Int,
-    onClick: () -> Boolean
 ) : TiledEntity(
     pos = pos,
     tileX = tileX,
@@ -63,14 +58,6 @@ class GamePauseEntity(
     }
 
     var isPaused: Boolean = false
-
-    init {
-        onClick(onClick)
-        //onClick {
-        //    isPaused = !isPaused
-        //    true
-        //}
-    }
 
     override fun update(deltaTime: Int) {
     }

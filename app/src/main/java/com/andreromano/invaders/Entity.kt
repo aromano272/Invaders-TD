@@ -8,8 +8,8 @@ abstract class Entity(
     var pos: Vec2F,
     var width: Int,
     var height: Int,
-    var posMode: PosMode = PosMode.CENTER
-) : Serializable {
+    var posMode: PosMode = PosMode.CENTER,
+) {
     private val _rect = RectF()
     val hitbox: RectF
         get() = when (posMode) {
@@ -34,20 +34,15 @@ abstract class Entity(
     abstract fun update(deltaTime: Int)
     abstract fun render(canvas: Canvas)
 
-    private var clickRegistered = false
-    protected fun onClick(callback: () -> Boolean) {
-        clickRegistered = true
-        ClickListenerRegistry.register(this, callback)
-    }
-
-    fun destroy() {
-        if (clickRegistered) {
-            ClickListenerRegistry.remove(this)
-        }
-    }
-
     fun Vec2F.toWorld(): Vec2F = localToWorld(this, pos)
 
+}
+
+fun <T : Entity> T.onClick(scene: Scene, onClick: () -> Unit): T = this.also {
+    ClickListenerRegistry.register(scene, this) {
+        onClick()
+        true
+    }
 }
 
 enum class PosMode {

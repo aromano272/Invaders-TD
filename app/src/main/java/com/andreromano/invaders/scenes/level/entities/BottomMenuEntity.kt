@@ -5,11 +5,14 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import com.andreromano.invaders.Entity
+import com.andreromano.invaders.Scene
 import com.andreromano.invaders.scenes.level.levelState
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.extensions.toPx
+import com.andreromano.invaders.onClick
 
 class BottomMenuEntity(
+    private val scene: Scene,
     pos: Vec2F,
     width: Int,
     height: Int,
@@ -31,7 +34,20 @@ class BottomMenuEntity(
             spec,
             spawnTurret,
             spawnBullet
-        )
+        ).onClick(scene) {
+            if (levelState.currMoney < spec.cost) return@onClick
+            val buildableEntity = levelState.selectedEntity as? BuildableEntity ?: return@onClick
+            val turret = TurretEntity(
+                buildableEntity.pos,
+                buildableEntity.tileX,
+                buildableEntity.tileY,
+                buildableEntity.width,
+                buildableEntity.height,
+                spec,
+                spawnBullet
+            )
+            spawnTurret(turret)
+        }
     }
 
     private val turretSelectedEntities = run {
@@ -119,24 +135,6 @@ class BuildTurretMenuItemEntity(
     private val paintDisabled = Paint().apply {
         style = Paint.Style.FILL
         this.color = Color.parseColor("#CC000000")
-    }
-
-    init {
-        onClick {
-            if (levelState.currMoney < spec.cost) return@onClick true
-            val buildableEntity = levelState.selectedEntity as? BuildableEntity ?: return@onClick false
-            val turret = TurretEntity(
-                buildableEntity.pos,
-                buildableEntity.tileX,
-                buildableEntity.tileY,
-                buildableEntity.width,
-                buildableEntity.height,
-                spec,
-                spawnBullet
-            )
-            spawnTurret(turret)
-            true
-        }
     }
 
     override fun update(deltaTime: Int) {

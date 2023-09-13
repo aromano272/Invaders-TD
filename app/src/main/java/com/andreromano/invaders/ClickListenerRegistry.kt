@@ -17,16 +17,21 @@ object ClickListenerRegistry {
         }
     }
 
-    fun register(entity: Entity, callback: () -> Boolean) {
-        registry.add(Entry(entity, callback))
+    fun register(scene: Scene, entity: Entity, callback: () -> Boolean) {
+        registry.add(Entry(scene, entity, callback))
     }
 
     fun remove(entity: Entity) {
         registry.removeIf { entry -> entry.entity == entity }
     }
+
+    fun remove(scene: Scene) {
+        registry.removeIf { entry -> entry.scene == scene }
+    }
 }
 
 class Entry(
+    val scene: Scene,
     val entity: Entity,
     val callback: () -> Boolean
 )
