@@ -4,6 +4,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import com.andreromano.invaders.Entity
+import com.andreromano.invaders.TiledEntity
 import com.andreromano.invaders.Vec2F
 
 class EndEntity(
@@ -12,7 +13,7 @@ class EndEntity(
     tileY: Int,
     width: Int,
     height: Int,
-) : Entity(
+) : TiledEntity(
     pos = pos,
     tileX = tileX,
     tileY = tileY,

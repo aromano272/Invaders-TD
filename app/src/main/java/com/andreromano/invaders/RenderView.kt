@@ -9,6 +9,8 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.andreromano.invaders.extensions.round
 import com.andreromano.invaders.extensions.toPx
+import com.andreromano.invaders.scenes.intro.IntroScene
+import com.andreromano.invaders.scenes.level.LevelScene
 import java.util.*
 
 
@@ -18,9 +20,14 @@ class RenderView @JvmOverloads constructor(
     defStyleAttr: Int = 0,
 ) : SurfaceView(context, attrs, defStyleAttr), Runnable {
 
+    init {
+        Persistence.context = context
+    }
+
     private var isRunning: Boolean = false
     private lateinit var thread: Thread
-    private val game: Game = Game()
+
+    private val pendingEvents = mutableListOf<ViewEvent>()
 
     private val textPaint = Paint().apply {
         style = Paint.Style.FILL
@@ -56,7 +63,11 @@ class RenderView @JvmOverloads constructor(
 
             canvas.drawRect(rect, paint)
             computeFrameStartNano = System.nanoTime()
-            game.updateAndRender(canvas, deltaTime.toInt())
+            if (pendingEvents.isNotEmpty()) {
+                pendingEvents.forEach { event -> GameState.activeScene.onViewEvent(event) }
+                pendingEvents.clear()
+            }
+            GameState.activeScene.updateAndRender(canvas, deltaTime.toInt())
             computeFrameEndNano = System.nanoTime()
 
             drawFps(canvas)
@@ -68,13 +79,13 @@ class RenderView @JvmOverloads constructor(
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        game.sceneSizeChanged(w, h)
+        GameState.activeScene.sceneSizeChanged(w, h)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action != ACTION_DOWN) return false
 
-        game.onViewEvent(Game.ViewEvent.ScreenClicked(event.x, event.y))
+        pendingEvents += ViewEvent.ScreenClicked(event.x, event.y)
 
         return true
     }
@@ -158,7 +169,7 @@ class RenderView @JvmOverloads constructor(
         thread.start()
     }
 
-    fun onViewEvent(viewEvent: Game.ViewEvent) {
-        game.onViewEvent(viewEvent)
+    fun onViewEvent(viewEvent: ViewEvent) {
+        GameState.activeScene.onViewEvent(viewEvent)
     }
 }

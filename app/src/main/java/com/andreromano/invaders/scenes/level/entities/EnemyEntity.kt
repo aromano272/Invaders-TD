@@ -4,15 +4,12 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import com.andreromano.invaders.Entity
-import com.andreromano.invaders.Position
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.extensions.scale
 import java.util.UUID
 
 class EnemyEntity(
     pos: Vec2F,
-    tileX: Int,
-    tileY: Int,
     width: Int,
     height: Int,
     private val health: Int,
@@ -21,8 +18,6 @@ class EnemyEntity(
     private val path: List<Waypoint>
 ) : Entity(
     pos = pos,
-    tileX = tileX,
-    tileY = tileY,
     width = width,
     height = height,
 ) {
@@ -69,7 +64,7 @@ class EnemyEntity(
         val moveAmount = speed * deltaTime
 
         val segment = path[currentWaypoint]
-        val posDifferenceToTarget = segment.end.pos - pos
+        val posDifferenceToTarget = segment.endPos - pos
         val distanceToTarget = posDifferenceToTarget.magnitude
         val movementDirectionNorm = posDifferenceToTarget.normalized()
         val newPos = pos + (movementDirectionNorm * moveAmount)
@@ -80,7 +75,7 @@ class EnemyEntity(
             // Assuming movement speed is linear
             // Swapping the terms of the moveAmount formula to get the time with the overshootDistance
             val remainingMoveTime = overshootDistance / speed
-            pos = segment.end.pos
+            pos = segment.endPos
             currentWaypoint++
 
             if (currentWaypoint == path.size) {
@@ -121,6 +116,6 @@ class EnemyEntity(
 }
 
 data class Waypoint(
-    val start: Position,
-    val end: Position
+    val startPos: Vec2F,
+    val endPos: Vec2F,
 )

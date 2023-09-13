@@ -4,17 +4,22 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.RectF
 import com.andreromano.invaders.Entity
+import com.andreromano.invaders.GameState
 import com.andreromano.invaders.TiledEntity
 import com.andreromano.invaders.Vec2F
+import com.andreromano.invaders.scenes.intro.IntroScene
+import com.andreromano.invaders.scenes.level.levelState
 import kotlin.math.sqrt
 
-class GameSpeedEntity(
+class GamePauseEntity(
     pos: Vec2F,
     tileX: Int,
     tileY: Int,
     width: Int,
     height: Int,
+    onClick: () -> Boolean
 ) : TiledEntity(
     pos = pos,
     tileX = tileX,
@@ -30,10 +35,23 @@ class GameSpeedEntity(
 
     private val triangleSideLength = width / 2.5f
     private val triangleWidth = 0.5f * sqrt(3f) * triangleSideLength
-    private val trianglePathsPerCurrStep = mapOf(
-        0 to listOf(trianglePath(0f)),
-        1 to listOf(trianglePath(-triangleWidth / 3f), trianglePath(triangleWidth / 3f)),
-        2 to listOf(trianglePath(-triangleWidth / 1.5f), trianglePath(0f), trianglePath(triangleWidth / 1.5f)),
+    private val trianglePath = trianglePath(0f)
+
+    private val pauseBarTop = (height - triangleSideLength) / 2f
+    private val pauseBarWidth = width / 5f
+    private val pauseRects = arrayOf(
+        RectF(
+            hitbox.left + pauseBarWidth,
+            hitbox.top + height / 4f,
+            hitbox.right - pauseBarWidth * 2f,
+            hitbox.bottom - height - height / 4f
+        ),
+        RectF(
+            hitbox.left + pauseBarWidth * 3f,
+            hitbox.top + height / 4f,
+            hitbox.right - pauseBarWidth * 4f,
+            hitbox.bottom - height - height / 4f
+        ),
     )
 
     private fun trianglePath(xOffset: Float) = Path().apply {
@@ -44,27 +62,26 @@ class GameSpeedEntity(
         lineTo(origin.x, origin.y)
     }
 
-
-    val currMultiplier: Float
-        get() = steps[currStep]
-
-    private var currStep = 0
-    private var steps = arrayOf(1f, 2f, 4f)
+    var isPaused: Boolean = false
 
     init {
-        onClick {
-            currStep = (currStep + 1) % steps.size
-            true
-        }
+        onClick(onClick)
+        //onClick {
+        //    isPaused = !isPaused
+        //    true
+        //}
     }
 
     override fun update(deltaTime: Int) {
     }
 
     override fun render(canvas: Canvas) {
-        val trianglePaths = trianglePathsPerCurrStep[currStep]!!
-        trianglePaths.forEach { path ->
-            canvas.drawPath(path, paint)
+        if (isPaused) {
+            canvas.drawPath(trianglePath, paint)
+        } else {
+            pauseRects.forEach {
+                canvas.drawRect(it, paint)
+            }
         }
     }
 }

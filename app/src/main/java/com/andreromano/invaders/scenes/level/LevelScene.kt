@@ -1,12 +1,23 @@
-package com.andreromano.invaders
+package com.andreromano.invaders.scenes.level
 
 import android.graphics.*
+
+import com.andreromano.invaders.ClickListenerRegistry
+import com.andreromano.invaders.GameState
+import com.andreromano.invaders.Level
+import com.andreromano.invaders.Persistence
+import com.andreromano.invaders.Scene
+import com.andreromano.invaders.TiledEntity
+import com.andreromano.invaders.Vec2F
+import com.andreromano.invaders.ViewEvent
+import com.andreromano.invaders.dot
 import com.andreromano.invaders.extensions.toPx
+import com.andreromano.invaders.scenes.intro.IntroScene
 import com.andreromano.invaders.scenes.level.entities.BottomMenuEntity
 import com.andreromano.invaders.scenes.level.entities.BuildableEntity
-import com.andreromano.invaders.scenes.level.entities.BulletEntity
 import com.andreromano.invaders.scenes.level.entities.EndEntity
 import com.andreromano.invaders.scenes.level.entities.EnemyEntity
+import com.andreromano.invaders.scenes.level.entities.GamePauseEntity
 import com.andreromano.invaders.scenes.level.entities.GameSpeedEntity
 import com.andreromano.invaders.scenes.level.entities.PathEntity
 import com.andreromano.invaders.scenes.level.entities.StartEntity
@@ -15,32 +26,15 @@ import com.andreromano.invaders.scenes.level.entities.WallEntity
 import com.andreromano.invaders.scenes.level.entities.Waypoint
 import java.lang.Exception
 
-object GameState {
-    var currentLevelIndex: Int = 0
-    var currentLevel: Level = Level.ONE
-    lateinit var currentLevelPath: List<Waypoint>
+class LevelScene(
+    private var savedGameToLoad: SaveableLevelState?
+) : Scene {
 
-    lateinit var entitiesMap: Array<Array<Entity?>>
+    init {
+        levelState = LevelState(savedGameToLoad?.currentLevel ?: Level.ONE)
+    }
 
-    var currMoney: Int = currentLevel.startingMoney
-
-    var enemyEntities = mutableListOf<EnemyEntity>()
-    var bulletEntities = mutableListOf<BulletEntity>()
-
-    var selectedTileX: Int = -1
-    var selectedTileY: Int = -1
-    val selectedEntity: Entity?
-        get() = try {
-            entitiesMap[selectedTileY][selectedTileX]
-        } catch (ex: ArrayIndexOutOfBoundsException) {
-            null
-        }
-
-    var bottomMenuEntity: BottomMenuEntity? = null
-    var gameSpeedEntity: GameSpeedEntity? = null
-}
-
-class Game {
+    private lateinit var levelStateAtStartOfWave: LevelState
 
     private var screenWidth = 0
     private var screenHeight = 0
@@ -51,7 +45,6 @@ class Game {
     private var mapTileWidth = 0
     private var mapTileHeight = 0
 
-    private var frameCount: Long = 0
     private var currTime: Long = 0
 
     private var score: Int = 0
@@ -119,37 +112,39 @@ class Game {
 
     private val deferred: MutableList<() -> Unit> = mutableListOf()
 
-    fun updateAndRender(canvas: Canvas, deltaTime: Int) {
-        val deltaTime = (deltaTime * (GameState.gameSpeedEntity?.currMultiplier ?: 1f)).toInt()
-        GameState.entitiesMap.forEach { rows ->
+    override fun updateAndRender(canvas: Canvas, deltaTime: Int) {
+        val deltaTime = (deltaTime * (levelState.gameSpeedEntity?.currMultiplier ?: 1f)).toInt()
+        levelState.entitiesMap.forEach { rows ->
             rows.forEach { entity ->
                 entity?.update(deltaTime)
                 entity?.render(canvas)
             }
         }
-        GameState.enemyEntities.forEach { entity ->
+        levelState.enemyEntities.forEach { entity ->
             entity.update(deltaTime)
             entity.render(canvas)
         }
-        GameState.bulletEntities.forEach { entity ->
+        levelState.bulletEntities.forEach { entity ->
             entity.update(deltaTime)
             entity.render(canvas)
         }
-        GameState.bottomMenuEntity?.update(deltaTime)
-        GameState.bottomMenuEntity?.render(canvas)
-        GameState.selectedEntity?.let {
+        levelState.bottomMenuEntity?.update(deltaTime)
+        levelState.bottomMenuEntity?.render(canvas)
+        levelState.selectedEntity?.let {
             canvas.drawRect(it.hitbox, paintSelected)
         }
-        GameState.gameSpeedEntity?.update(deltaTime)
-        GameState.gameSpeedEntity?.render(canvas)
+        levelState.gameSpeedEntity?.update(deltaTime)
+        levelState.gameSpeedEntity?.render(canvas)
+        levelState.gamePauseEntity?.update(deltaTime)
+        levelState.gamePauseEntity?.render(canvas)
 
         updateGameState(deltaTime, canvas)
 
         clearDestroyedEntities()
 
 //        canvas.drawText("Rect Pos: (${pacman?.x}, ${pacman?.y})", sceneWidth / 2f, sceneHeight / 2f, textPaint)
-        canvas.drawText("Wave: ${currentWave + 1}, Enemies: ${GameState.enemyEntities.size}", 50f, boardSceneHeight - 50f, boldTextPaint)
-        canvas.drawText("Money: ${GameState.currMoney}", 50f, boardSceneHeight - 50f + boldTextPaint.textSize, boldTextPaint)
+        canvas.drawText("Wave: ${levelState.currentWave + 1}, Enemies: ${levelState.enemyEntities.size}", 50f, boardSceneHeight - 50f, boldTextPaint)
+        canvas.drawText("Money: ${levelState.currMoney}", 50f, boardSceneHeight - 50f + boldTextPaint.textSize, boldTextPaint)
 
         // clear padding
 //        canvas.drawRect(Rect(boardSceneWidth, 0, screenWidth, screenHeight), blackPaint)
@@ -161,12 +156,7 @@ class Game {
             it()
         }
         deferred.clear()
-
-        frameCount++
     }
-
-
-    private var currentWave: Int = 0
 
     private var spawnedCount = 0
     private var nextSpawnTime = 0L
@@ -180,16 +170,16 @@ class Game {
     }
 
     private fun spawnEnemyIfNeeded(deltaTime: Int, canvas: Canvas) {
-        val wave = GameState.currentLevel.waves[currentWave]
+        val wave = levelState.currentLevel.waves[levelState.currentWave]
         if (spawnedCount == wave.enemyCount) return
 
         val newTime = currTime + deltaTime
         val timeDiff = (newTime - nextSpawnTime).toInt()
         if (timeDiff >= 0) {
             with (startEntity) {
-                val enemy = EnemyEntity(pos, tileX, tileY, width, height,
-                    wave.enemyHealth, wave.enemySpeed, wave.enemyMoney, GameState.currentLevelPath)
-                GameState.enemyEntities += enemy
+                val enemy = EnemyEntity(pos, width, height,
+                    wave.enemyHealth, wave.enemySpeed, wave.enemyMoney, levelState.currentLevelPath)
+                levelState.enemyEntities += enemy
                 enemy.update(timeDiff)
                 enemy.render(canvas)
 
@@ -200,31 +190,35 @@ class Game {
     }
 
     private fun spawnNextWaveIfNeeded(deltaTime: Int) {
-        val wave = GameState.currentLevel.waves[currentWave]
-        if (GameState.enemyEntities.isEmpty() && spawnedCount == wave.enemyCount) {
-            currentWave++
+        val wave = levelState.currentLevel.waves[levelState.currentWave]
+        if (levelState.enemyEntities.isEmpty() && spawnedCount == wave.enemyCount) {
+            levelState.currentWave++
             spawnedCount = 0
             nextSpawnTime = currTime
+            levelStateAtStartOfWave = levelState
         }
     }
 
     private fun advanceLevelIfNeeded(deltaTime: Int) {
-        if (currentWave == GameState.currentLevel.waves.size) {
-            GameState.currentLevelIndex++
-            currentWave = 0
+        if (levelState.currentWave == levelState.currentLevel.waves.size) {
+            val nextLevel = Level.values().indexOf(levelState.currentLevel).let {
+                if (it >= Level.values().size) return
+                Level.values()[it + 1]
+            }
+            levelState.currentWave = 0
             spawnedCount = 0
             nextSpawnTime = currTime
-            loadLevel(Level.values()[GameState.currentLevelIndex])
+            loadLevel(nextLevel)
         }
     }
 
     private fun clearDestroyedEntities() {
-        val destroyedEnemies = GameState.enemyEntities.filter { it.destroyed }
+        val destroyedEnemies = levelState.enemyEntities.filter { it.destroyed }
         destroyedEnemies.forEach { it ->
-            if (it.killed) GameState.currMoney += it.money
+            if (it.killed) levelState.currMoney += it.money
         }
-        GameState.enemyEntities.removeAll(destroyedEnemies)
-        GameState.bulletEntities.removeIf { it.destroyed }
+        levelState.enemyEntities.removeAll(destroyedEnemies)
+        levelState.bulletEntities.removeIf { it.destroyed }
     }
 
 
@@ -232,42 +226,42 @@ class Game {
         deferred += runnable
     }
 
-    fun onViewEvent(viewEvent: ViewEvent) {
-        when (viewEvent) {
+    override fun onViewEvent(event: ViewEvent) {
+        when (event) {
             is ViewEvent.ScreenClicked -> {
-                val tileX = getTileXFromScreenX(viewEvent.x.toInt())
-                val tileY = getTileYFromScreenY(viewEvent.y.toInt())
+                val tileX = getTileXFromScreenX(event.x.toInt())
+                val tileY = getTileYFromScreenY(event.y.toInt())
                 val entity = try {
-                    GameState.entitiesMap[tileY][tileX]
+                    levelState.entitiesMap[tileY][tileX]
                 } catch (ex: Exception) {
                     null
                 }
 
                 if (entity is BuildableEntity || entity is TurretEntity) {
-                    GameState.selectedTileX = tileX
-                    GameState.selectedTileY = tileY
+                    levelState.selectedTileX = tileX
+                    levelState.selectedTileY = tileY
                 }
-                ClickListenerRegistry.onScreenClicked(viewEvent.x, viewEvent.y)
+                ClickListenerRegistry.onScreenClicked(event.x, event.y)
             }
         }
     }
 
-    private fun removeEntity(entity: Entity) {
-        GameState.entitiesMap[entity.tileY][entity.tileX] = null
+    private fun removeEntity(entity: TiledEntity) {
+        levelState.entitiesMap[entity.tileY][entity.tileX] = null
     }
 
-    fun sceneSizeChanged(w: Int, h: Int) {
+    override fun sceneSizeChanged(w: Int, h: Int) {
         require(h > w) {
             "Game doesn't support landscape mode"
         }
         screenWidth = w
         screenHeight = h
 
-        loadLevel(GameState.currentLevel)
+        loadLevel(levelState.currentLevel)
     }
 
     fun restartLevel() {
-        loadLevel(GameState.currentLevel)
+        loadLevel(levelState.currentLevel)
     }
 
     fun loadLevel(level: Level) {
@@ -289,7 +283,7 @@ class Game {
         boardSceneWidth = screenWidth - remainderWidth
         boardSceneHeight = entityHeight * mapTileHeight
 
-        GameState.entitiesMap = Array<Array<Entity?>>(mapTileHeight) {
+        levelState.entitiesMap = Array<Array<TiledEntity?>>(mapTileHeight) {
             Array(mapTileWidth) {
                 null
             }
@@ -300,7 +294,7 @@ class Game {
                 val x = getScreenXFromTileX(tileX).toFloat()
                 val y = getScreenYFromTileY(tileY).toFloat()
                 val pos = Vec2F(x, y)
-                val entity: Entity = when (c) {
+                val entity: TiledEntity = when (c) {
                     'o' -> {
                         StartEntity(pos, tileX, tileY, entityWidth, entityHeight).also {
                             startEntity = it
@@ -322,24 +316,26 @@ class Game {
                     }
                     else -> throw UnsupportedOperationException("Could not parse symbol: '$c' at x: $x y: $y")
                 }
-                GameState.entitiesMap[tileY][tileX] = entity
+                levelState.entitiesMap[tileY][tileX] = entity
             }
         }
 
         walkThroughLevelAndCreatePath()
 
-        GameState.bottomMenuEntity = BottomMenuEntity(
+        levelState.bottomMenuEntity = BottomMenuEntity(
             Vec2F(screenWidth / 2f, screenHeight - 200 / 2f),
-            0, 0, screenWidth, 200,
+             screenWidth, 200,
             spawnTurret = { turret ->
-                GameState.currMoney -= turret.totalMoneySpent
-                GameState.entitiesMap[turret.tileY][turret.tileX] = turret
+                levelState.currMoney -= turret.totalMoneySpent
+                levelState.entitiesMap[turret.tileY][turret.tileX] = turret
             },
-            spawnBullet = { bullet -> GameState.bulletEntities.add(bullet) }
+            spawnBullet = { bullet -> levelState.bulletEntities.add(bullet) }
         )
-        val gameSpeedTileX = mapTileWidth - 1
+        val gameSpeedTileX = mapTileWidth - 2
         val gameSpeedTileY = 0
-        GameState.gameSpeedEntity = GameSpeedEntity(
+        val gamePauseTileX = gameSpeedTileX + 1
+        val gamePauseTileY = 0
+        levelState.gameSpeedEntity = GameSpeedEntity(
             Vec2F(
                 x = getScreenXFromTileX(gameSpeedTileX).toFloat(),
                 y = getScreenYFromTileY(gameSpeedTileY).toFloat(),
@@ -349,6 +345,51 @@ class Game {
             entityWidth,
             entityHeight
         )
+        levelState.gamePauseEntity = GamePauseEntity(
+            Vec2F(
+                x = getScreenXFromTileX(gamePauseTileX).toFloat(),
+                y = getScreenYFromTileY(gamePauseTileY).toFloat(),
+            ),
+            gamePauseTileX,
+            gamePauseTileY,
+            entityWidth,
+            entityHeight,
+            onClick = { these fucking listeners are not working, think about a proper solution for this
+                Persistence.save(SaveableLevelState.from(levelStateAtStartOfWave))
+                GameState.activeScene = IntroScene()
+                GameState.activeScene.sceneSizeChanged(screenWidth, screenHeight)
+                true
+            }
+        )
+
+        val savedGame = savedGameToLoad
+        if (savedGame != null) {
+            levelState.currentWave = savedGame.currentWave
+            levelState.currMoney = savedGame.currMoney
+            savedGame.placedTurrets.forEach { turret ->
+                val target = levelState.entitiesMap[turret.tileY][turret.tileX]
+                if (target is BuildableEntity) {
+                    val entity = TurretEntity(
+                        pos = target.pos,
+                        tileX = turret.tileX,
+                        tileY = turret.tileY,
+                        width = target.width,
+                        height = target.height,
+                        spec = turret.spec,
+                        spawnBullet = { bullet -> levelState.bulletEntities.add(bullet) },
+                    )
+
+                    repeat(turret.currLevel - 1) {
+                        entity.upgrade()
+                    }
+
+                    levelState.entitiesMap[turret.tileY][turret.tileX] = entity
+                }
+            }
+
+            this.savedGameToLoad = null
+        }
+        levelStateAtStartOfWave = levelState
     }
 
     private fun walkThroughLevelAndCreatePath() {
@@ -359,16 +400,16 @@ class Game {
             1 to 0
         )
 
-        val pathEntities = mutableListOf<Entity>(startEntity)
+            val pathEntities = mutableListOf<TiledEntity>(startEntity)
 
-        var prevEntity: Entity = startEntity
-        var currentEntity: Entity = startEntity
-        while (currentEntity != endEntity) {
+            var prevEntity: TiledEntity = startEntity
+            var currentEntity: TiledEntity = startEntity
+            while (currentEntity != endEntity) {
             val x = currentEntity.tileX
             val y = currentEntity.tileY
 
             val entity = transforms
-                .mapNotNull { (tY, tX) -> GameState.entitiesMap[y + tY][x + tX] }
+                .mapNotNull { (tY, tX) -> levelState.entitiesMap[y + tY][x + tX] }
                 .first { entity ->
                     entity != prevEntity && (entity is PathEntity || entity is EndEntity)
                 }
@@ -380,47 +421,47 @@ class Game {
 
         val waypoints = mutableListOf<Waypoint>()
 
-        var currStartPosition: Position = pathEntities[0].currentPos()
-        var currEndPosition: Position = pathEntities[1].currentPos()
-        var currDirection = (currEndPosition.pos - currStartPosition.pos).normalized()
+        var currStartPos: Vec2F = pathEntities[0].pos
+        var currEndPos: Vec2F = pathEntities[1].pos
+        var currDirection = (currEndPos - currStartPos).normalized()
         pathEntities.drop(2).forEach { entity ->
-            val newEndPosition = entity.currentPos()
-            val newDirection = (newEndPosition.pos - currEndPosition.pos).normalized()
+            val newEndPos = entity.pos
+            val newDirection = (newEndPos - currEndPos).normalized()
             val isSameDirection = dot(currDirection, newDirection) == 1f
             if (isSameDirection) {
-                currEndPosition = newEndPosition
+                currEndPos = newEndPos
             } else {
-                waypoints += Waypoint(currStartPosition, currEndPosition)
-                currStartPosition = currEndPosition
-                currEndPosition = newEndPosition
+                waypoints += Waypoint(currStartPos, currEndPos)
+                currStartPos = currEndPos
+                currEndPos = newEndPos
                 currDirection = newDirection
             }
         }
-        waypoints += Waypoint(currStartPosition, currEndPosition)
+        waypoints += Waypoint(currStartPos, currEndPos)
 
-        GameState.currentLevelPath = waypoints
+        levelState.currentLevelPath = waypoints
     }
 
     fun drawDebug(canvas: Canvas) {
-        GameState.currentLevelPath.forEach { waypoint ->
+        levelState.currentLevelPath.forEach { waypoint ->
             val rectWidth = 20f
             val startRect = RectF(
-                waypoint.start.pos.x - rectWidth / 2f,
-                waypoint.start.pos.y - rectWidth / 2f,
-                waypoint.start.pos.x + rectWidth / 2f,
-                waypoint.start.pos.y + rectWidth / 2f,
+                waypoint.startPos.x - rectWidth / 2f,
+                waypoint.startPos.y - rectWidth / 2f,
+                waypoint.startPos.x + rectWidth / 2f,
+                waypoint.startPos.y + rectWidth / 2f,
             )
             val endRect = RectF(
-                waypoint.end.pos.x - rectWidth / 2f,
-                waypoint.end.pos.y - rectWidth / 2f,
-                waypoint.end.pos.x + rectWidth / 2f,
-                waypoint.end.pos.y + rectWidth / 2f,
+                waypoint.endPos.x - rectWidth / 2f,
+                waypoint.endPos.y - rectWidth / 2f,
+                waypoint.endPos.x + rectWidth / 2f,
+                waypoint.endPos.y + rectWidth / 2f,
             )
             canvas.drawRect(startRect, yellowPaint)
             canvas.drawRect(endRect, yellowPaint)
         }
 
-        (GameState.selectedEntity as? TurretEntity)?.let {
+        (levelState.selectedEntity as? TurretEntity)?.let {
             listOf(
                 "currShootDamage" to it.currShootDamage,
                 "currShootDelay" to it.currShootDelay,
@@ -431,10 +472,6 @@ class Game {
                 canvas.drawText("$key: $value", it.hitbox.left, it.hitbox.bottom + 40 + debugTurretTextPaint.textSize * index, debugTurretTextPaint)
             }
         }
-    }
-
-    sealed class ViewEvent {
-        class ScreenClicked(val x: Float, val y: Float) : ViewEvent()
     }
 
     private fun getScreenXFromTileX(tileX: Int): Int = tileX * entityWidth + entityWidth / 2

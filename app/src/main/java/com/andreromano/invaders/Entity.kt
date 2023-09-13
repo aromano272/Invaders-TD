@@ -1,33 +1,35 @@
 package com.andreromano.invaders
 
 import android.graphics.Canvas
-import android.graphics.Rect
 import android.graphics.RectF
-import kotlin.math.roundToInt
+import java.io.Serializable
 
 abstract class Entity(
     var pos: Vec2F,
-    var tileX: Int,
-    var tileY: Int,
-    val width: Int,
-    val height: Int,
-) {
+    var width: Int,
+    var height: Int,
+    var posMode: PosMode = PosMode.CENTER
+) : Serializable {
     private val _rect = RectF()
     val hitbox: RectF
-        get() = _rect.apply {
-            left = (pos.x - width / 2)
-            top = (pos.y - height / 2)
-            right = (pos.x + width / 2)
-            bottom = (pos.y + height / 2)
+        get() = when (posMode) {
+            PosMode.TL -> {
+                _rect.apply {
+                    left = pos.x
+                    top = pos.y
+                    right = pos.x + width
+                    bottom = pos.y + height
+                }
+            }
+            PosMode.CENTER -> {
+                _rect.apply {
+                    left = (pos.x - width / 2)
+                    top = (pos.y - height / 2)
+                    right = (pos.x + width / 2)
+                    bottom = (pos.y + height / 2)
+                }
+            }
         }
-
-    fun currentPos(): Position = Position(pos, tileX, tileY)
-
-    fun updatePos(pos: Position) {
-        this.pos = pos.pos
-        tileX = pos.tileX
-        tileY = pos.tileY
-    }
 
     abstract fun update(deltaTime: Int)
     abstract fun render(canvas: Canvas)
@@ -48,8 +50,7 @@ abstract class Entity(
 
 }
 
-data class Position(
-    val pos: Vec2F,
-    val tileX: Int,
-    val tileY: Int
-)
+enum class PosMode {
+    TL,
+    CENTER,
+}

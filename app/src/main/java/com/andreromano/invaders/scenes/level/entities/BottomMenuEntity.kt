@@ -5,22 +5,18 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import com.andreromano.invaders.Entity
-import com.andreromano.invaders.GameState
+import com.andreromano.invaders.scenes.level.levelState
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.extensions.toPx
 
 class BottomMenuEntity(
     pos: Vec2F,
-    tileX: Int,
-    tileY: Int,
     width: Int,
     height: Int,
     private val spawnTurret: (TurretEntity) -> Unit,
     private val spawnBullet: (BulletEntity) -> Unit
 ) : Entity(
     pos = pos,
-    tileX = tileX,
-    tileY = tileY,
     width = width,
     height = height,
 ) {
@@ -31,7 +27,6 @@ class BottomMenuEntity(
         val itemPos = Vec2F(x, pos.y)
         BuildTurretMenuItemEntity(
             itemPos,
-            0, 0,
             itemWidth, height,
             spec,
             spawnTurret,
@@ -48,11 +43,11 @@ class BottomMenuEntity(
 
         listOf(
             TurretSelectedMenuItemEntity(
-                startPos, 0, 0,
+                startPos,
                 itemWidth, height, true
             ),
             TurretSelectedMenuItemEntity(
-                startPos + Vec2F(itemWidth.toFloat(), 0f), 0, 0,
+                startPos + Vec2F(itemWidth.toFloat(), 0f),
                 itemWidth, height, false
             ),
         )
@@ -66,7 +61,7 @@ class BottomMenuEntity(
     }
 
     override fun update(deltaTime: Int) {
-        val selectedEntity = GameState.selectedEntity ?: return
+        val selectedEntity = levelState.selectedEntity ?: return
 
         when (selectedEntity) {
             is BuildableEntity -> buildTurretEntities.forEach { entity ->
@@ -83,7 +78,7 @@ class BottomMenuEntity(
     }
 
     override fun render(canvas: Canvas) {
-        val selectedEntity = GameState.selectedEntity ?: return
+        val selectedEntity = levelState.selectedEntity ?: return
 
         canvas.drawRect(hitbox, paint)
         when (selectedEntity) {
@@ -103,8 +98,6 @@ class BottomMenuEntity(
 
 class BuildTurretMenuItemEntity(
     pos: Vec2F,
-    tileX: Int,
-    tileY: Int,
     width: Int,
     height: Int,
     private val spec: TurretSpec,
@@ -112,8 +105,6 @@ class BuildTurretMenuItemEntity(
     private val spawnBullet: (BulletEntity) -> Unit,
 ) : Entity(
     pos = pos,
-    tileX = tileX,
-    tileY = tileY,
     width = width,
     height = height,
 ) {
@@ -132,8 +123,8 @@ class BuildTurretMenuItemEntity(
 
     init {
         onClick {
-            if (GameState.currMoney < spec.cost) return@onClick true
-            val buildableEntity = GameState.selectedEntity as? BuildableEntity ?: return@onClick false
+            if (levelState.currMoney < spec.cost) return@onClick true
+            val buildableEntity = levelState.selectedEntity as? BuildableEntity ?: return@onClick false
             val turret = TurretEntity(
                 buildableEntity.pos,
                 buildableEntity.tileX,
@@ -149,7 +140,7 @@ class BuildTurretMenuItemEntity(
     }
 
     override fun update(deltaTime: Int) {
-        enabled = GameState.currMoney >= spec.cost
+        enabled = levelState.currMoney >= spec.cost
     }
 
     override fun render(canvas: Canvas) {
@@ -162,15 +153,11 @@ class BuildTurretMenuItemEntity(
 
 class TurretSelectedMenuItemEntity(
     pos: Vec2F,
-    tileX: Int,
-    tileY: Int,
     width: Int,
     height: Int,
     private val isMenuItemUpgrade: Boolean
 ) : Entity(
     pos = pos,
-    tileX = tileX,
-    tileY = tileY,
     width = width,
     height = height,
 ) {
@@ -200,7 +187,7 @@ class TurretSelectedMenuItemEntity(
     init {
         onClick {
             if (!enabled) return@onClick false
-            val entity = GameState.selectedEntity as? TurretEntity ?: return@onClick false
+            val entity = levelState.selectedEntity as? TurretEntity ?: return@onClick false
             if (isMenuItemUpgrade) {
                 entity.upgrade()
             } else {
@@ -211,10 +198,10 @@ class TurretSelectedMenuItemEntity(
     }
 
     override fun update(deltaTime: Int) {
-        entity = (GameState.selectedEntity as? TurretEntity)
+        entity = (levelState.selectedEntity as? TurretEntity)
         val entity = entity ?: return
         if (isMenuItemUpgrade) {
-            enabled = GameState.currMoney >= entity.upgradeCost
+            enabled = levelState.currMoney >= entity.upgradeCost
         }
     }
 

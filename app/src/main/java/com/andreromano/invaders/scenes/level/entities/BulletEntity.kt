@@ -9,8 +9,6 @@ import com.andreromano.invaders.extensions.scale
 
 class BulletEntity(
     pos: Vec2F,
-    tileX: Int,
-    tileY: Int,
     width: Int,
     height: Int,
     private val damage: Int,
@@ -19,8 +17,6 @@ class BulletEntity(
     private val getEnemyById: (String) -> EnemyEntity?
 ) : Entity(
     pos = pos,
-    tileX = tileX,
-    tileY = tileY,
     width = width,
     height = height,
 ) {

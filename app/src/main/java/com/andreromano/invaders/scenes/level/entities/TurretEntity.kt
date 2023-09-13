@@ -4,10 +4,10 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
-import com.andreromano.invaders.Entity
-import com.andreromano.invaders.GameState
+import com.andreromano.invaders.TiledEntity
+import com.andreromano.invaders.scenes.level.levelState
 import com.andreromano.invaders.Vec2F
-import com.andreromano.invaders.drawDebugVec
+import com.andreromano.invaders.scenes.level.drawDebugVec
 import com.andreromano.invaders.extensions.scale
 
 class TurretEntity(
@@ -16,9 +16,9 @@ class TurretEntity(
     tileY: Int,
     width: Int,
     height: Int,
-    spec: TurretSpec,
+    val spec: TurretSpec,
     private val spawnBullet: (BulletEntity) -> Unit
-) : Entity(
+) : TiledEntity(
     pos = pos,
     tileX = tileX,
     tileY = tileY,
@@ -65,9 +65,9 @@ class TurretEntity(
 
     fun upgrade() {
         if (isMaxLevel) return
-        if (GameState.currMoney < upgradeCost) return
+        if (levelState.currMoney < upgradeCost) return
 
-        GameState.currMoney -= upgradeCost
+        levelState.currMoney -= upgradeCost
         currShootDamage = (currShootDamage * upgradeSpec.shootDamageMultiplier).toInt()
         currShootDelay = (currShootDelay * upgradeSpec.shootDelayMultiplier).toInt()
         totalMoneySpent += upgradeCost
@@ -77,8 +77,8 @@ class TurretEntity(
     }
 
     fun sell() {
-        GameState.currMoney += sellMoney
-        GameState.entitiesMap[tileY][tileX] = BuildableEntity(pos, tileX, tileY, width, height)
+        levelState.currMoney += sellMoney
+        levelState.entitiesMap[tileY][tileX] = BuildableEntity(pos, tileX, tileY, width, height)
         destroy()
     }
 
@@ -87,7 +87,7 @@ class TurretEntity(
         if (bulletSpawnDelay > 0) return
         bulletSpawnDelay = currShootDelay
 
-        val enemies = GameState.enemyEntities
+        val enemies = levelState.enemyEntities
         val enemiesWithinRange = enemies.filter { enemy ->
             if (enemy.willDieFromIncomingDamage()) return@filter false
 
@@ -100,21 +100,21 @@ class TurretEntity(
         if (enemiesWithinRange.isEmpty()) return
 
         val getEnemyById: (String) -> EnemyEntity? = { id ->
-            GameState.enemyEntities.find { it.id == id }
+            levelState.enemyEntities.find { it.id == id }
         }
 
         if (isSpreader) {
             val targetEnemies = enemiesWithinRange.shuffled().take(4 )
 
             targetEnemies.forEach { enemy ->
-                val bullet = BulletEntity(pos, 0, 0, width, height, currShootDamage, enemy.id, 10, getEnemyById)
+                val bullet = BulletEntity(pos,  width, height, currShootDamage, enemy.id, 10, getEnemyById)
                 enemy.addIncomingDamage(currShootDamage)
                 spawnBullet(bullet)
             }
         } else {
             val enemy = enemiesWithinRange.first()
 
-            val bullet = BulletEntity(pos, 0, 0, width, height, currShootDamage, enemy.id, 10, getEnemyById)
+            val bullet = BulletEntity(pos, width, height, currShootDamage, enemy.id, 10, getEnemyById)
             enemy.addIncomingDamage(currShootDamage)
             spawnBullet(bullet)
         }
