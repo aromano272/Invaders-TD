@@ -76,10 +76,18 @@ class TurretEntity(
         currLevel++
     }
 
+    fun restoreUpgradeLevel(level: Int) {
+        totalMoneySpent = spec.totalMoneySpentForLevel(level)
+        currShootDamage = spec.shootDamageForLevel(level)
+        currShootDelay = spec.shootDelayForLevel(level)
+        currRangeRadiusToWidthFactor *= spec.rangeRadiusToWidthFactorForLevel(level)
+        upgradeCost = spec.upgradeCostForLevel(level)
+        currLevel = level
+    }
+
     fun sell() {
         levelState.currMoney += sellMoney
         levelState.entitiesMap[tileY][tileX] = BuildableEntity(pos, tileX, tileY, width, height)
-        destroy()
     }
 
     override fun update(deltaTime: Int) {

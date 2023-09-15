@@ -5,20 +5,20 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import com.andreromano.invaders.Entity
+import com.andreromano.invaders.Scene
 import com.andreromano.invaders.TiledEntity
+import com.andreromano.invaders.UiEntity
 import com.andreromano.invaders.Vec2F
 import kotlin.math.sqrt
 
 class GameSpeedEntity(
+    scene: Scene,
     pos: Vec2F,
-    tileX: Int,
-    tileY: Int,
     width: Int,
     height: Int,
-) : TiledEntity(
+) : UiEntity(
+    scene = scene,
     pos = pos,
-    tileX = tileX,
-    tileY = tileY,
     width = width,
     height = height,
 ) {
@@ -51,14 +51,13 @@ class GameSpeedEntity(
     private var currStep = 0
     private var steps = arrayOf(1f, 2f, 4f)
 
-    init {
-        onClick {
-            currStep = (currStep + 1) % steps.size
-            true
-        }
+    override fun onClick(): Boolean {
+        currStep = (currStep + 1) % steps.size
+        return true
     }
 
     override fun update(deltaTime: Int) {
+        super.update(deltaTime)
     }
 
     override fun render(canvas: Canvas) {

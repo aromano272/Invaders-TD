@@ -9,6 +9,7 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.andreromano.invaders.extensions.round
 import com.andreromano.invaders.extensions.toPx
+import com.andreromano.invaders.scenes.intro.IntroScene
 import java.util.*
 
 
@@ -30,12 +31,10 @@ class RenderView @JvmOverloads constructor(
     private val game: Game = object : Game {
         override var width: Int = 0
         override var height: Int = 0
-        override lateinit var activeScene: Scene
+        override var activeScene: Scene = IntroScene(this)
 
         override fun changeScene(scene: Scene) {
-            if (!::activeScene.isInitialized) {
-                ClickListenerRegistry.remove(activeScene)
-            }
+            ClickListenerRegistry.remove(activeScene)
             activeScene = scene
         }
     }

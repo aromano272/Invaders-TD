@@ -33,3 +33,40 @@ enum class UpgradeSpec(
     STRONG(2f, 0.8f, 2f, 1.1f, 0, 4),
     SPREADER(1.2f, 0.8f, 2f, 1.05f, 1, 4),
 }
+
+fun TurretSpec.totalMoneySpentForLevel(level: Int): Int {
+    var result = cost.toFloat()
+    repeat(level - 1) {
+        val upgradeCostForLevel = upgradeCostForLevel(it + 1)
+        result += upgradeCostForLevel
+    }
+    return result.toInt()
+}
+fun TurretSpec.shootDamageForLevel(level: Int): Int {
+    var result = shootDamage.toFloat()
+    repeat(level - 1) {
+        result *= upgradeSpec.shootDamageMultiplier
+    }
+    return result.toInt()
+}
+fun TurretSpec.shootDelayForLevel(level: Int): Int {
+    var result = shootDelay.toFloat()
+    repeat(level - 1) {
+        result *= upgradeSpec.shootDelayMultiplier
+    }
+    return result.toInt()
+}
+fun TurretSpec.upgradeCostForLevel(level: Int): Int {
+    var result = cost.toFloat()
+    repeat(level - 1) {
+        result *= upgradeSpec.upgradeCostMultiplier
+    }
+    return result.toInt()
+}
+fun TurretSpec.rangeRadiusToWidthFactorForLevel(level: Int): Int {
+    var result = rangeRadiusToWidthFactor.toFloat()
+    repeat(level - 1) {
+        result *= upgradeSpec.rangeRadiusToWidthFactorMultiplier
+    }
+    return result.toInt()
+}

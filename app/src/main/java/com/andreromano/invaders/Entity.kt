@@ -38,13 +38,6 @@ abstract class Entity(
 
 }
 
-fun <T : Entity> T.onClick(scene: Scene, onClick: () -> Unit): T = this.also {
-    ClickListenerRegistry.register(scene, this) {
-        onClick()
-        true
-    }
-}
-
 enum class PosMode {
     TL,
     CENTER,

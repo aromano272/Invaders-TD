@@ -5,20 +5,21 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
+import com.andreromano.invaders.Scene
 import com.andreromano.invaders.TiledEntity
+import com.andreromano.invaders.UiEntity
 import com.andreromano.invaders.Vec2F
 import kotlin.math.sqrt
 
 class GamePauseEntity(
+    scene: Scene,
     pos: Vec2F,
-    tileX: Int,
-    tileY: Int,
     width: Int,
     height: Int,
-) : TiledEntity(
+    private val onEntityClick: () -> Unit,
+) : UiEntity(
+    scene = scene,
     pos = pos,
-    tileX = tileX,
-    tileY = tileY,
     width = width,
     height = height,
 ) {
@@ -57,9 +58,15 @@ class GamePauseEntity(
         lineTo(origin.x, origin.y)
     }
 
+    override fun onClick(): Boolean {
+        onEntityClick()
+        return true
+    }
+
     var isPaused: Boolean = false
 
     override fun update(deltaTime: Int) {
+        super.update(deltaTime)
     }
 
     override fun render(canvas: Canvas) {

@@ -1,7 +1,5 @@
 package com.andreromano.invaders
 
-import java.io.Serializable
-
 abstract class TiledEntity(
     pos: Vec2F,
     var tileX: Int,
@@ -12,4 +10,4 @@ abstract class TiledEntity(
     pos,
     width,
     height,
-), Serializable
+)

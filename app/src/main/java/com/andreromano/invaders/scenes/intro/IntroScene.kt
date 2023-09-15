@@ -10,10 +10,10 @@ import com.andreromano.invaders.Game
 import com.andreromano.invaders.Persistence
 import com.andreromano.invaders.PosMode
 import com.andreromano.invaders.Scene
+import com.andreromano.invaders.UiEntity
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.ViewEvent
 import com.andreromano.invaders.extensions.toPx
-import com.andreromano.invaders.onClick
 import com.andreromano.invaders.scenes.intro.ColumnEntity.Companion.WRAP_CONTENT
 import com.andreromano.invaders.scenes.level.LevelScene
 import com.andreromano.invaders.scenes.level.SaveableLevelState
@@ -29,18 +29,18 @@ class IntroScene(
 
     private val savedGame: SaveableLevelState? = Persistence.load()
     private val resumeButton = if (savedGame != null) {
-        ButtonEntity("Resume", Vec2F(0f, 0f)).onClick(this) {
+        ButtonEntity(this, "Resume", Vec2F(0f, 0f), {
             game.changeScene(LevelScene(game, savedGame))
-        }
+        })
     } else {
         null
     }
-    private val newGameButton = ButtonEntity("New Game", Vec2F(0f, 0f)).onClick(this) {
+    private val newGameButton = ButtonEntity(this, "New Game", Vec2F(0f, 0f), {
         game.changeScene(LevelScene(game, null))
-    }
+    })
     private val column = ColumnEntity(
         Vec2F(0f, 0f),
-        1000, WRAP_CONTENT,
+        1000, screenHeight,
         listOfNotNull(
             resumeButton,
             newGameButton
@@ -90,7 +90,7 @@ class ColumnEntity(
             val childrenHeight = children.sumOf { it.height }
             pos.y + (height - childrenHeight) / 2
         }
-        children.forEachIndexed { index, it ->
+        children.forEach {
             it.pos.y = currY
             it.pos.x = pos.x
 
@@ -117,9 +117,12 @@ class ColumnEntity(
 }
 
 class ButtonEntity(
+    scene: Scene,
     val text: String,
     pos: Vec2F,
-) : Entity(
+    private val onEntityClick: () -> Unit,
+) : UiEntity(
+    scene = scene,
     pos = pos,
     width = -1,
     height = -1,
@@ -148,8 +151,13 @@ class ButtonEntity(
         height = textHeight.toInt()
     }
 
-    override fun update(deltaTime: Int) {
+    override fun onClick(): Boolean {
+        onEntityClick()
+        return true
+    }
 
+    override fun update(deltaTime: Int) {
+        super.update(deltaTime)
     }
 
     override fun render(canvas: Canvas) {

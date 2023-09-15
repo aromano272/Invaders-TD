@@ -12,7 +12,6 @@ import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.ViewEvent
 import com.andreromano.invaders.dot
 import com.andreromano.invaders.extensions.toPx
-import com.andreromano.invaders.onClick
 import com.andreromano.invaders.scenes.intro.IntroScene
 import com.andreromano.invaders.scenes.level.entities.BottomMenuEntity
 import com.andreromano.invaders.scenes.level.entities.BuildableEntity
@@ -32,11 +31,9 @@ class LevelScene(
     private var savedGameToLoad: SaveableLevelState?
 ) : Scene(game) {
 
-    private lateinit var levelStateAtStartOfWave: LevelState
-
     private var hasLoadedLevel = false
-    private var screenWidth = 0
-    private var screenHeight = 0
+    private var screenWidth = game.width
+    private var screenHeight = game.height
     private var boardSceneWidth = 0
     private var boardSceneHeight = 0
     private var entityWidth = 0
@@ -113,7 +110,10 @@ class LevelScene(
 
     override fun updateAndRender(canvas: Canvas, deltaTime: Int) {
         if (!hasLoadedLevel) {
-            loadLevel(savedGameToLoad?.currentLevel ?: Level.ONE)
+            val level = savedGameToLoad?.currentLevel ?: Level.ONE
+            levelState = LevelState(level)
+            loadLevel(level)
+            hasLoadedLevel = true
             return
         }
         val deltaTime = (deltaTime * (levelState.gameSpeedEntity?.currMultiplier ?: 1f)).toInt()
@@ -198,7 +198,7 @@ class LevelScene(
             levelState.currentWave++
             spawnedCount = 0
             nextSpawnTime = currTime
-            levelStateAtStartOfWave = levelState
+            Persistence.save(SaveableLevelState.from(levelState))
         }
     }
 
@@ -340,58 +340,53 @@ class LevelScene(
         val gamePauseTileX = gameSpeedTileX + 1
         val gamePauseTileY = 0
         levelState.gameSpeedEntity = GameSpeedEntity(
+            this,
             Vec2F(
                 x = getScreenXFromTileX(gameSpeedTileX).toFloat(),
                 y = getScreenYFromTileY(gameSpeedTileY).toFloat(),
             ),
-            gameSpeedTileX,
-            gameSpeedTileY,
             entityWidth,
             entityHeight
         )
         levelState.gamePauseEntity = GamePauseEntity(
+            this,
             Vec2F(
                 x = getScreenXFromTileX(gamePauseTileX).toFloat(),
                 y = getScreenYFromTileY(gamePauseTileY).toFloat(),
             ),
-            gamePauseTileX,
-            gamePauseTileY,
             entityWidth,
             entityHeight,
-        ).onClick(this) {
-            Persistence.save(SaveableLevelState.from(levelStateAtStartOfWave))
-            game.changeScene(IntroScene(game))
-            true
-        }
+            onEntityClick = {
+                game.changeScene(IntroScene(game))
+            }
+        )
 
         val savedGame = savedGameToLoad
         if (savedGame != null) {
             levelState.currentWave = savedGame.currentWave
             levelState.currMoney = savedGame.currMoney
-            savedGame.placedTurrets.forEach { turret ->
-                val target = levelState.entitiesMap[turret.tileY][turret.tileX]
+            savedGame.placedTurrets.forEach { savedTurret ->
+                val target = levelState.entitiesMap[savedTurret.tileY][savedTurret.tileX]
                 if (target is BuildableEntity) {
                     val entity = TurretEntity(
                         pos = target.pos,
-                        tileX = turret.tileX,
-                        tileY = turret.tileY,
+                        tileX = savedTurret.tileX,
+                        tileY = savedTurret.tileY,
                         width = target.width,
                         height = target.height,
-                        spec = turret.spec,
+                        spec = savedTurret.spec,
                         spawnBullet = { bullet -> levelState.bulletEntities.add(bullet) },
                     )
 
-                    repeat(turret.currLevel - 1) {
-                        entity.upgrade()
-                    }
+                    entity.restoreUpgradeLevel(savedTurret.currLevel)
 
-                    levelState.entitiesMap[turret.tileY][turret.tileX] = entity
+                    levelState.entitiesMap[savedTurret.tileY][savedTurret.tileX] = entity
                 }
             }
 
             this.savedGameToLoad = null
         }
-        levelStateAtStartOfWave = levelState
+        Persistence.save(SaveableLevelState.from(levelState))
     }
 
     private fun walkThroughLevelAndCreatePath() {
@@ -402,11 +397,11 @@ class LevelScene(
             1 to 0
         )
 
-            val pathEntities = mutableListOf<TiledEntity>(startEntity)
+        val pathEntities = mutableListOf<TiledEntity>(startEntity)
 
-            var prevEntity: TiledEntity = startEntity
-            var currentEntity: TiledEntity = startEntity
-            while (currentEntity != endEntity) {
+        var prevEntity: TiledEntity = startEntity
+        var currentEntity: TiledEntity = startEntity
+        while (currentEntity != endEntity) {
             val x = currentEntity.tileX
             val y = currentEntity.tileY
 
