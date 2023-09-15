@@ -33,20 +33,19 @@ class GamePauseEntity(
     private val triangleWidth = 0.5f * sqrt(3f) * triangleSideLength
     private val trianglePath = trianglePath(0f)
 
-    private val pauseBarTop = (height - triangleSideLength) / 2f
-    private val pauseBarWidth = width / 5f
+    private val pauseBarWidth = width / 8f
     private val pauseRects = arrayOf(
         RectF(
-            hitbox.left + pauseBarWidth,
-            hitbox.top + height / 4f,
-            hitbox.right - pauseBarWidth * 2f,
-            hitbox.bottom - height - height / 4f
+            hitbox.left + pauseBarWidth * 2.5f,
+            hitbox.top + height / 3.5f,
+            hitbox.left + pauseBarWidth * 3.5f,
+            hitbox.bottom - height / 3.5f
         ),
         RectF(
-            hitbox.left + pauseBarWidth * 3f,
-            hitbox.top + height / 4f,
-            hitbox.right - pauseBarWidth * 4f,
-            hitbox.bottom - height - height / 4f
+            hitbox.left + pauseBarWidth * 4.5f,
+            hitbox.top + height / 3.5f,
+            hitbox.left + pauseBarWidth * 5.5f,
+            hitbox.bottom - height / 3.5f
         ),
     )
 
