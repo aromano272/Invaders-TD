@@ -6,7 +6,6 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import com.andreromano.invaders.Scene
-import com.andreromano.invaders.TiledEntity
 import com.andreromano.invaders.UiEntity
 import com.andreromano.invaders.Vec2F
 import kotlin.math.sqrt
@@ -31,7 +30,7 @@ class GamePauseEntity(
 
     private val triangleSideLength = width / 2.5f
     private val triangleWidth = 0.5f * sqrt(3f) * triangleSideLength
-    private val trianglePath = trianglePath(0f)
+    private val trianglePath = trianglePath()
 
     private val pauseBarWidth = width / 8f
     private val pauseRects = arrayOf(
@@ -49,8 +48,8 @@ class GamePauseEntity(
         ),
     )
 
-    private fun trianglePath(xOffset: Float) = Path().apply {
-        val origin = Vec2F(pos.x - (triangleWidth / 2f) + xOffset, pos.y - (triangleWidth / 2f))
+    private fun trianglePath() = Path().apply {
+        val origin = Vec2F(pos.x - (triangleWidth / 2f), pos.y - (triangleWidth / 2f))
         moveTo(origin.x, origin.y)
         lineTo(origin.x + triangleWidth, origin.y + triangleSideLength / 2f)
         lineTo(origin.x, origin.y + triangleSideLength)
