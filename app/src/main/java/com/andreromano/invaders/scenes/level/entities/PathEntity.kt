@@ -6,6 +6,7 @@ import android.graphics.Paint
 import com.andreromano.invaders.Entity
 import com.andreromano.invaders.TiledEntity
 import com.andreromano.invaders.Vec2F
+import com.andreromano.invaders.scenes.level.drawDebugRect
 
 class PathEntity(
     pos: Vec2F,
@@ -21,6 +22,12 @@ class PathEntity(
     height = height,
 ) {
 
+    private val debugPaint = Paint().apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 2f
+        color = Color.RED
+    }
+
     private val paint = Paint().apply {
         style = Paint.Style.FILL
         color = Color.parseColor("#66605A")
@@ -31,5 +38,6 @@ class PathEntity(
 
     override fun render(canvas: Canvas) {
         canvas.drawRect(hitbox, paint)
+        canvas.drawRect(hitbox, debugPaint)
     }
 }
