@@ -86,11 +86,6 @@ class EditorScene(
     override fun onViewEvent(event: ViewEvent) {
         when (event) {
             is ViewEvent.ScreenClicked -> {
-                val tileX = gameboardEntity.getTileXFromScreenX(event.x.toInt())
-                val tileY = gameboardEntity.getTileYFromScreenY(event.y.toInt())
-                gameboardEntity.selectedTileX = tileX
-                gameboardEntity.selectedTileY = tileY
-
                 ClickListenerRegistry.onScreenClicked(event.x, event.y)
             }
         }

@@ -129,7 +129,7 @@ class BuildTurretMenuItemEntity(
         this.color = Color.parseColor("#CC000000")
     }
 
-    override fun onClick(): Boolean {
+    override fun onClick(x: Float, y: Float): Boolean {
         if (levelState.currMoney < spec.cost) return false
         val buildableEntity = levelState.selectedEntity as? BuildableEntity ?: return false
         val turret = TurretEntity(
@@ -192,7 +192,7 @@ class TurretSelectedMenuItemEntity(
         color = Color.WHITE
     }
 
-    override fun onClick(): Boolean {
+    override fun onClick(x: Float, y: Float): Boolean {
         if (!enabled) return false
         val entity = levelState.selectedEntity as? TurretEntity ?: return false
         if (isMenuItemUpgrade) {

@@ -8,20 +8,21 @@ abstract class UiEntity(
     width: Int,
     height: Int,
     posMode: PosMode = PosMode.CENTER,
+    val zIndex: Int = 0
 ) : Entity(
     pos = pos,
     width = width,
     height = height,
     posMode = posMode,
 ) {
-    open fun onClick(): Boolean = false
+    open fun onClick(x: Float, y: Float): Boolean = false
 
     private var wasOnClickRegistered: Boolean = false
     @CallSuper
     override fun update(deltaTime: Int) {
         if (!wasOnClickRegistered) {
-            ClickListenerRegistry.register(scene, this) {
-                onClick()
+            ClickListenerRegistry.register(scene, this) { x, y ->
+                onClick(x, y)
             }
             wasOnClickRegistered = true
         }

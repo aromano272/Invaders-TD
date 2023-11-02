@@ -107,7 +107,7 @@ class ButtonEntity(
         height = textHeight.toInt()
     }
 
-    override fun onClick(): Boolean {
+    override fun onClick(x: Float, y: Float): Boolean {
         onEntityClick()
         return true
     }

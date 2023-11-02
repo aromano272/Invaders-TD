@@ -4,19 +4,25 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import com.andreromano.invaders.Entity
+import com.andreromano.invaders.PosMode
 import com.andreromano.invaders.Scene
 import com.andreromano.invaders.TiledEntity
+import com.andreromano.invaders.UiEntity
 import com.andreromano.invaders.Vec2F
 
 class GameboardEntity(
-    private val scene: Scene,
+    scene: Scene,
     pos: Vec2F,
     width: Int,
     height: Int,
-) : Entity(
+    posMode: PosMode = PosMode.TL
+) : UiEntity(
+    scene = scene,
     pos = pos,
     width = width,
     height = height,
+    posMode = posMode,
+    zIndex = -1
 ) {
 
     private val paintSelected = Paint().apply {
@@ -43,8 +49,6 @@ class GameboardEntity(
     var entityWidth = 0
     var entityHeight = 0
 
-    private var remainderWidth = 0f
-
     private var boardSceneWidth = 0
     private var boardSceneHeight = 0
 
@@ -52,6 +56,9 @@ class GameboardEntity(
     var selectedTileY: Int? = null
 
     fun invalidate() {
+        selectedTileX = if ((selectedTileX ?: 0) < tileWidth) selectedTileX else null
+        selectedTileY = if ((selectedTileY ?: 0) < tileHeight) selectedTileY else null
+
         entityWidth = width / tileWidth
         entityHeight = entityWidth
 
@@ -91,6 +98,7 @@ class GameboardEntity(
     fun getTileYFromScreenY(screenY: Int): Int = screenY / entityHeight
 
     override fun update(deltaTime: Int) {
+        super.update(deltaTime)
         entitiesMap.forEach { rows ->
             rows.forEach { entity ->
                 entity?.update(deltaTime)
@@ -114,6 +122,15 @@ class GameboardEntity(
         if (selectedEntity != null) {
             canvas.drawRect(selectedEntity.hitbox, paintSelected)
         }
+    }
+
+    override fun onClick(x: Float, y: Float): Boolean {
+        val tileX = getTileXFromScreenX(x.toInt())
+        val tileY = getTileYFromScreenY(y.toInt())
+        selectedTileX = tileX
+        selectedTileY = tileY
+
+        return true
     }
 
 }

@@ -51,7 +51,7 @@ class GameSpeedEntity(
     private var currStep = 0
     private var steps = arrayOf(1f, 2f, 4f)
 
-    override fun onClick(): Boolean {
+    override fun onClick(x: Float, y: Float): Boolean {
         currStep = (currStep + 1) % steps.size
         return true
     }

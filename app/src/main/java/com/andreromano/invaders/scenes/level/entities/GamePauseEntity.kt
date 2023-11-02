@@ -56,7 +56,7 @@ class GamePauseEntity(
         lineTo(origin.x, origin.y)
     }
 
-    override fun onClick(): Boolean {
+    override fun onClick(x: Float, y: Float): Boolean {
         onEntityClick()
         return true
     }
