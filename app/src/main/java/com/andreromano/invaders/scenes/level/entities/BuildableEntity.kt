@@ -6,6 +6,7 @@ import android.graphics.Paint
 import com.andreromano.invaders.Entity
 import com.andreromano.invaders.TiledEntity
 import com.andreromano.invaders.Vec2F
+import com.andreromano.invaders.drawTile
 import com.andreromano.invaders.extensions.scale
 
 class BuildableEntity(
@@ -36,7 +37,6 @@ class BuildableEntity(
     }
 
     override fun render(canvas: Canvas) {
-        canvas.drawRect(hitbox, paint2)
-        canvas.drawRect(hitbox.scale(0.9f), paint)
+        canvas.drawTile(19, 6, hitbox)
     }
 }

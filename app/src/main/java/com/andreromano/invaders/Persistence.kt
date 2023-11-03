@@ -11,12 +11,8 @@ import java.io.FileOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
-@SuppressLint("StaticFieldLeak")
 object Persistence {
-    lateinit var context: Context
-
-    private val file: File
-        get() = File(context.filesDir, "savegame")
+    private lateinit var file: File
 
     fun save(saveableLevelState: SaveableLevelState) {
         val fout = FileOutputStream(file)
@@ -33,5 +29,9 @@ object Persistence {
             ex.printStackTrace()
             null
         }
+    }
+
+    fun initialise(context: Context) {
+        file = File(context.filesDir, "savegame")
     }
 }

@@ -20,7 +20,8 @@ class RenderView @JvmOverloads constructor(
 ) : SurfaceView(context, attrs, defStyleAttr), Runnable {
 
     init {
-        Persistence.context = context
+        Persistence.initialise(context)
+        TileMap.initialise(context)
     }
 
     private var isRunning: Boolean = false
