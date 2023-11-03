@@ -6,6 +6,7 @@ import android.graphics.Paint
 import com.andreromano.invaders.Entity
 import com.andreromano.invaders.TiledEntity
 import com.andreromano.invaders.Vec2F
+import com.andreromano.invaders.drawBuildableTile
 import com.andreromano.invaders.drawTile
 import com.andreromano.invaders.extensions.scale
 
@@ -33,10 +34,12 @@ class BuildableEntity(
         color = Color.parseColor("#964B00")
     }
 
+    var nineSliceIndex: Int = -1 // [0, 8]
+
     override fun update(deltaTime: Int) {
     }
 
     override fun render(canvas: Canvas) {
-        canvas.drawTile(19, 6, hitbox)
+        canvas.drawBuildableTile(nineSliceIndex, hitbox)
     }
 }

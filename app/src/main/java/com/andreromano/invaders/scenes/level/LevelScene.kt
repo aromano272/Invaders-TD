@@ -324,6 +324,7 @@ class LevelScene(
         }
 
         walkThroughLevelAndCreatePath()
+        walkThroughLevelAndUpdateBuildableNineSliceIndexes()
 
         levelState.bottomMenuEntity = BottomMenuEntity(
             this,
@@ -437,6 +438,10 @@ class LevelScene(
         waypoints += Waypoint(currStartPos, currEndPos)
 
         levelState.currentLevelPath = waypoints
+    }
+
+    private fun walkThroughLevelAndUpdateBuildableNineSliceIndexes() {
+        todo
     }
 
     fun drawDebug(canvas: Canvas) {

@@ -7,7 +7,7 @@ import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.RectF
 
-object TileMap {
+object TileAtlas {
     lateinit var bitmap: Bitmap
         private set
 
@@ -18,7 +18,7 @@ object TileMap {
     fun initialise(context: Context) {
         bitmap = BitmapFactory.decodeResource(
             context.resources,
-            R.drawable.tilemap,
+            R.drawable.tileatlas,
             BitmapFactory.Options().apply {
                 inScaled = false
             }
@@ -27,12 +27,31 @@ object TileMap {
     }
 }
 
+fun Canvas.drawBuildableTile(nineSliceIndex: Int, destRect: RectF) {
+    val centerOfTileX = 1
+    val centerOfTileY = 4
+    val (tileX, tileY) = when (nineSliceIndex) {
+        0 -> (centerOfTileX - 1) to (centerOfTileY - 1)
+        1 -> (centerOfTileX - 0) to (centerOfTileY - 1)
+        2 -> (centerOfTileX + 1) to (centerOfTileY - 1)
+        3 -> (centerOfTileX - 1) to (centerOfTileY - 0)
+        4 -> (centerOfTileX - 0) to (centerOfTileY - 0)
+        5 -> (centerOfTileX + 1) to (centerOfTileY - 0)
+        6 -> (centerOfTileX - 1) to (centerOfTileY + 1)
+        7 -> (centerOfTileX - 0) to (centerOfTileY + 1)
+        8 -> (centerOfTileX + 1) to (centerOfTileY + 1)
+        else -> throw IllegalStateException()
+    }
+
+    drawTile(tileX, tileY, destRect)
+}
+
 fun Canvas.drawTile(tileX: Int, tileY: Int, destRect: RectF) {
-    val tileSize = TileMap.tileSize
+    val tileSize = TileAtlas.tileSize
     val x = tileX * tileSize
     val y = tileY * tileSize
     this.drawBitmap(
-        TileMap.bitmap,
+        TileAtlas.bitmap,
         Rect(
             x,
             y,

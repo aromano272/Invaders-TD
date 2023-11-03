@@ -21,7 +21,7 @@ class RenderView @JvmOverloads constructor(
 
     init {
         Persistence.initialise(context)
-        TileMap.initialise(context)
+        TileAtlas.initialise(context)
     }
 
     private var isRunning: Boolean = false
