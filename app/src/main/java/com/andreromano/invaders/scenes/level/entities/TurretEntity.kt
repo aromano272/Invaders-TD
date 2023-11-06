@@ -4,9 +4,12 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
+import com.andreromano.invaders.TerrainType
 import com.andreromano.invaders.TiledEntity
 import com.andreromano.invaders.scenes.level.levelState
 import com.andreromano.invaders.Vec2F
+import com.andreromano.invaders.drawTerrainTile
+import com.andreromano.invaders.drawTurretEntity
 import com.andreromano.invaders.scenes.level.drawDebugVec
 import com.andreromano.invaders.extensions.scale
 
@@ -23,7 +26,8 @@ class TurretEntity(
     tileX = tileX,
     tileY = tileY,
     width = width,
-    height = height
+    height = height,
+    terrainType = TerrainType.GRASS
 ) {
     private val upgradeSpec: UpgradeSpec = spec.upgradeSpec
     private val isSpreader = spec == TurretSpec.SPREADER
@@ -129,19 +133,8 @@ class TurretEntity(
     }
 
     override fun render(canvas: Canvas) {
-        canvas.drawOval(hitbox.scale(0.60f), paint)
+        canvas.drawTerrainTile(this, hitbox)
+        canvas.drawTurretEntity(this, hitbox)
         canvas.drawOval(hitbox.scale(currRangeRadiusToWidthFactor * 2), radiusPaint)
-        repeat(currLevel - 1) { index ->
-            val width = width / 10
-            val height = width
-            val padding = width
-            val left = hitbox.left + padding + (width + padding) * index
-            val top = hitbox.top + padding
-            canvas.drawRect(
-                RectF(left, top, left + width, top + height),
-                paintUpgradeLevel
-            )
-        }
-        canvas.drawDebugVec(this.pos, turretToEnemy, length = 1f)
     }
 }

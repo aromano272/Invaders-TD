@@ -4,9 +4,11 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import com.andreromano.invaders.Entity
+import com.andreromano.invaders.TerrainType
 import com.andreromano.invaders.TiledEntity
 import com.andreromano.invaders.Vec2F
-import com.andreromano.invaders.drawTile
+import com.andreromano.invaders.drawObstacleTile
+import com.andreromano.invaders.drawTerrainTile
 import kotlin.random.Random
 
 class WallEntity(
@@ -21,8 +23,9 @@ class WallEntity(
     tileY = tileY,
     width = width,
     height = height,
+    terrainType = TerrainType.GRASS
 ) {
-    private val randomWallType = Random.nextInt(8)
+    private val randomWallType = Random.nextInt()
 
     private val paint = Paint().apply {
         style = Paint.Style.FILL
@@ -33,7 +36,7 @@ class WallEntity(
     }
 
     override fun render(canvas: Canvas) {
-        canvas.drawTile(14, 5, hitbox)
-        canvas.drawTile(15 + randomWallType, 5, hitbox)
+        canvas.drawTerrainTile(this, hitbox)
+        canvas.drawObstacleTile(randomWallType, hitbox)
     }
 }

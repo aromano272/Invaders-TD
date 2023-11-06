@@ -7,6 +7,8 @@ import com.andreromano.invaders.Game
 import com.andreromano.invaders.Level
 import com.andreromano.invaders.Persistence
 import com.andreromano.invaders.Scene
+import com.andreromano.invaders.TerrainType
+import com.andreromano.invaders.TileEdges
 import com.andreromano.invaders.TiledEntity
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.ViewEvent
@@ -324,7 +326,7 @@ class LevelScene(
         }
 
         walkThroughLevelAndCreatePath()
-        walkThroughLevelAndUpdateBuildableNineSliceIndexes()
+        walkThroughLevelAndUpdateTerrainTileEdges()
 
         levelState.bottomMenuEntity = BottomMenuEntity(
             this,
@@ -440,8 +442,19 @@ class LevelScene(
         levelState.currentLevelPath = waypoints
     }
 
-    private fun walkThroughLevelAndUpdateBuildableNineSliceIndexes() {
-        todo
+    private fun walkThroughLevelAndUpdateTerrainTileEdges() {
+        val terrain = levelState.entitiesMap
+        terrain.forEachIndexed { y, rows ->
+            rows.forEachIndexed { x, entity ->
+                if (entity == null) return@forEachIndexed
+                val top = terrain.getOrNull(y - 1, x)?.terrainType ?: TerrainType.GRASS
+                val right = terrain.getOrNull(y, x + 1)?.terrainType ?: TerrainType.GRASS
+                val bottom = terrain.getOrNull(y + 1, x)?.terrainType ?: TerrainType.GRASS
+                val left = terrain.getOrNull(y, x - 1)?.terrainType ?: TerrainType.GRASS
+
+                entity.tileEdges = TileEdges(top, right, bottom, left)
+            }
+        }
     }
 
     fun drawDebug(canvas: Canvas) {
@@ -519,4 +532,10 @@ fun Canvas.drawDebugRect(
             this.color = color
         }
     )
+}
+
+fun <T> Array<Array<T>>.getOrNull(y: Int, x: Int): T? = try {
+    this[y][x]
+} catch (ex: Exception) {
+    null
 }

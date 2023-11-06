@@ -6,8 +6,11 @@ abstract class TiledEntity(
     var tileY: Int,
     width: Int,
     height: Int,
+    val terrainType: TerrainType,
 ) : Entity(
     pos,
     width,
     height,
-)
+) {
+    lateinit var tileEdges: TileEdges
+}

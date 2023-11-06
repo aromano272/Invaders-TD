@@ -4,9 +4,10 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import com.andreromano.invaders.Entity
+import com.andreromano.invaders.TerrainType
 import com.andreromano.invaders.TiledEntity
 import com.andreromano.invaders.Vec2F
-import com.andreromano.invaders.drawTile
+import com.andreromano.invaders.drawTerrainTile
 import com.andreromano.invaders.scenes.level.drawDebugRect
 
 class PathEntity(
@@ -21,6 +22,7 @@ class PathEntity(
     tileY = tileY,
     width = width,
     height = height,
+    terrainType = TerrainType.DIRT
 ) {
 
     private val debugPaint = Paint().apply {
@@ -38,6 +40,6 @@ class PathEntity(
     }
 
     override fun render(canvas: Canvas) {
-        canvas.drawTile(20, 6, hitbox)
+        canvas.drawTerrainTile(this, hitbox)
     }
 }
