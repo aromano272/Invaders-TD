@@ -3,23 +3,21 @@ package com.andreromano.invaders.scenes.level.entities
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.RectF
 import com.andreromano.invaders.TerrainType
 import com.andreromano.invaders.TiledEntity
 import com.andreromano.invaders.scenes.level.levelState
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.drawTerrainTile
-import com.andreromano.invaders.drawTurretEntity
-import com.andreromano.invaders.scenes.level.drawDebugVec
+import com.andreromano.invaders.drawTowerEntity
 import com.andreromano.invaders.extensions.scale
 
-class TurretEntity(
+class TowerEntity(
     pos: Vec2F,
     tileX: Int,
     tileY: Int,
     width: Int,
     height: Int,
-    val spec: TurretSpec,
+    val spec: TowerSpec,
     private val spawnBullet: (BulletEntity) -> Unit
 ) : TiledEntity(
     pos = pos,
@@ -30,7 +28,7 @@ class TurretEntity(
     terrainType = TerrainType.GRASS
 ) {
     private val upgradeSpec: UpgradeSpec = spec.upgradeSpec
-    private val isSpreader = spec == TurretSpec.SPREADER
+    private val isSpreader = spec == TowerSpec.SPREADER
 
     var currShootDamage = spec.shootDamage
     var currShootDelay = spec.shootDelay
@@ -65,7 +63,7 @@ class TurretEntity(
     }
 
     var enemyPos: Vec2F = Vec2F.zero()
-    var turretToEnemy: Vec2F = Vec2F.zero()
+    var towerToEnemy: Vec2F = Vec2F.zero()
 
     fun upgrade() {
         if (isMaxLevel) return
@@ -104,10 +102,10 @@ class TurretEntity(
             if (enemy.willDieFromIncomingDamage()) return@filter false
 
             enemyPos = enemy.pos
-            turretToEnemy = enemy.pos - this.pos
-            val distanceToTurret = turretToEnemy.magnitude
-            val enemyWithinTurretRange = distanceToTurret < rangeRadius
-            enemyWithinTurretRange
+            towerToEnemy = enemy.pos - this.pos
+            val distanceToTower = towerToEnemy.magnitude
+            val enemyWithinTowerRange = distanceToTower < rangeRadius
+            enemyWithinTowerRange
         }
         if (enemiesWithinRange.isEmpty()) return
 
@@ -134,7 +132,7 @@ class TurretEntity(
 
     override fun render(canvas: Canvas) {
         canvas.drawTerrainTile(this, hitbox)
-        canvas.drawTurretEntity(this, hitbox)
+        canvas.drawTowerEntity(this, hitbox)
         canvas.drawOval(hitbox.scale(currRangeRadiusToWidthFactor * 2), radiusPaint)
     }
 }

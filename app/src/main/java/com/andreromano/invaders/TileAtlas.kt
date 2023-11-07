@@ -7,9 +7,12 @@ import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Rect
 import android.graphics.RectF
+import androidx.core.graphics.toRectF
+import com.andreromano.invaders.animation.AnimatedEntity
+import com.andreromano.invaders.animation.AnimationSpec
 import com.andreromano.invaders.extensions.copy
-import com.andreromano.invaders.scenes.level.entities.TurretEntity
-import com.andreromano.invaders.scenes.level.entities.TurretSpec
+import com.andreromano.invaders.scenes.level.entities.TowerEntity
+import com.andreromano.invaders.scenes.level.entities.TowerSpec
 import kotlin.math.abs
 
 object TileAtlas {
@@ -19,9 +22,15 @@ object TileAtlas {
     lateinit var terrainBitmap: Bitmap
         private set
 
+    lateinit var tower1WeaponAnimBitmap: Bitmap
+        private set
+
     private val towerNumColTiles = 3
     var towerTileWidth: Int = -1
     var towerTileHeight: Int = -1
+
+    val towerWeaponAnimNumRowTiles = 6
+    var towerWeaponAnimTileSize: Int = -1
 
     private val terrainNumRowTiles = 16
     var terrainTileSize: Int = -1
@@ -45,6 +54,15 @@ object TileAtlas {
         )
         towerTileWidth = tower1Bitmap.width / towerNumColTiles
         towerTileHeight = tower1Bitmap.height
+
+        tower1WeaponAnimBitmap = BitmapFactory.decodeResource(
+            context.resources,
+            R.drawable.tower_01___level_01___weapon,
+            BitmapFactory.Options().apply {
+                inScaled = false
+            }
+        )
+        towerWeaponAnimTileSize = tower1WeaponAnimBitmap.width / towerWeaponAnimNumRowTiles
     }
 }
 
@@ -116,11 +134,11 @@ fun Canvas.drawTerrainTile(entity: TiledEntity, destRect: RectF) {
     drawTerrainTile(tilePos, destRect)
 }
 
-fun Canvas.drawTurretEntity(entity: TurretEntity, destRect: RectF) {
+fun Canvas.drawTowerEntity(entity: TowerEntity, destRect: RectF) {
     val towerBitmap = when (entity.spec) {
-        TurretSpec.FAST -> TileAtlas.tower1Bitmap
-        TurretSpec.STRONG -> TODO()
-        TurretSpec.SPREADER -> TODO()
+        TowerSpec.FAST -> TileAtlas.tower1Bitmap
+        TowerSpec.STRONG -> TODO()
+        TowerSpec.SPREADER -> TODO()
     }
     val tilePos = TilePos(entity.currLevel - 1, 0)
 
@@ -148,21 +166,54 @@ private fun Canvas.drawTerrainTile(tilePos: TilePos, destRect: RectF) {
     )
 }
 
+val tower1WeaponAnim: AnimationSpec by lazy {
+    AnimationSpec(
+        bitmap = TileAtlas.tower1WeaponAnimBitmap,
+        numFrames = TileAtlas.towerWeaponAnimNumRowTiles,
+        tileSize = TileAtlas.towerWeaponAnimTileSize,
+        durationMs = 1000,
+    )
+}
+
 fun Canvas.drawAnimationTile(entity: AnimatedEntity, destRect: RectF) {
+    val sourceRect = Rect(
+        0,
+        0,
+        entity.spec.tileSize,
+        entity.spec.tileSize,
+    )
+
     val matrix = Matrix().apply {
+        setRectToRect(sourceRect.toRectF(), destRect, Matrix.ScaleToFit.CENTER)
+        postRotate(entity.rotationDeg, destRect.centerX(), destRect.centerY())
     }
 
-    val tileX = entity.currTileCol * entity.spec.tileSize
-    val tileY = 0
     this.drawBitmap(
-        entity.spec.bitmap,
-        Rect(
-            tileX,
-            tileY,
-            tileX + entity.spec.tileSize,
-            tileY + entity.spec.tileSize
-        ),
-        destRect,
+        entity.spec.bitmaps[entity.currTileCol],
+        matrix,
+        null
+    )
+}
+
+fun Canvas.drawDebugTile(destRect: RectF) {
+    val tileSize = TileAtlas.terrainTileSize
+    val x = obstaclesTilesPos[0].x * tileSize
+    val y = obstaclesTilesPos[0].y * tileSize
+    val sourceRect = Rect(
+        x,
+        y,
+        x + tileSize,
+        y + tileSize
+    )
+
+    val matrix = Matrix().apply {
+        setRectToRect(sourceRect.toRectF(), destRect, Matrix.ScaleToFit.CENTER)
+//        postRotate(90f, destRect.centerX(), destRect.centerY())
+    }
+
+    this.drawBitmap(
+        TileAtlas.terrainBitmap,
+        matrix,
         null
     )
 }

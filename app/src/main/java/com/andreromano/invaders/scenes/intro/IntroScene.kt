@@ -4,6 +4,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
+import com.andreromano.invaders.animation.AnimatedEntity
 import com.andreromano.invaders.ClickListenerRegistry
 import com.andreromano.invaders.ColumnEntity
 import com.andreromano.invaders.Game
@@ -17,6 +18,8 @@ import com.andreromano.invaders.extensions.toPx
 import com.andreromano.invaders.scenes.editor.EditorScene
 import com.andreromano.invaders.scenes.level.LevelScene
 import com.andreromano.invaders.scenes.level.SaveableLevelState
+import com.andreromano.invaders.scenes.level.drawDebugRect
+import com.andreromano.invaders.tower1WeaponAnim
 
 class IntroScene(
     game: Game,

@@ -2,7 +2,7 @@ package com.andreromano.invaders.scenes.level.entities
 
 import android.graphics.Color
 
-enum class TurretSpec(
+enum class TowerSpec(
     val shootDamage: Int,
     val shootDelay: Int,
     val cost: Int,
@@ -14,11 +14,11 @@ enum class TurretSpec(
     SPREADER(100, 300, 150, 2f, UpgradeSpec.SPREADER),
 }
 
-val TurretSpec.color: Int
+val TowerSpec.color: Int
     get() = when (this) {
-        TurretSpec.FAST -> Color.BLUE
-        TurretSpec.STRONG -> Color.RED
-        TurretSpec.SPREADER -> Color.MAGENTA
+        TowerSpec.FAST -> Color.BLUE
+        TowerSpec.STRONG -> Color.RED
+        TowerSpec.SPREADER -> Color.MAGENTA
     }
 
 enum class UpgradeSpec(
@@ -34,7 +34,7 @@ enum class UpgradeSpec(
     SPREADER(1.2f, 0.8f, 2f, 1.05f, 1, 4),
 }
 
-fun TurretSpec.totalMoneySpentForLevel(level: Int): Int {
+fun TowerSpec.totalMoneySpentForLevel(level: Int): Int {
     var result = cost.toFloat()
     repeat(level - 1) {
         val upgradeCostForLevel = upgradeCostForLevel(it + 1)
@@ -42,28 +42,28 @@ fun TurretSpec.totalMoneySpentForLevel(level: Int): Int {
     }
     return result.toInt()
 }
-fun TurretSpec.shootDamageForLevel(level: Int): Int {
+fun TowerSpec.shootDamageForLevel(level: Int): Int {
     var result = shootDamage.toFloat()
     repeat(level - 1) {
         result *= upgradeSpec.shootDamageMultiplier
     }
     return result.toInt()
 }
-fun TurretSpec.shootDelayForLevel(level: Int): Int {
+fun TowerSpec.shootDelayForLevel(level: Int): Int {
     var result = shootDelay.toFloat()
     repeat(level - 1) {
         result *= upgradeSpec.shootDelayMultiplier
     }
     return result.toInt()
 }
-fun TurretSpec.upgradeCostForLevel(level: Int): Int {
+fun TowerSpec.upgradeCostForLevel(level: Int): Int {
     var result = cost.toFloat()
     repeat(level - 1) {
         result *= upgradeSpec.upgradeCostMultiplier
     }
     return result.toInt()
 }
-fun TurretSpec.rangeRadiusToWidthFactorForLevel(level: Int): Int {
+fun TowerSpec.rangeRadiusToWidthFactorForLevel(level: Int): Int {
     var result = rangeRadiusToWidthFactor.toFloat()
     repeat(level - 1) {
         result *= upgradeSpec.rangeRadiusToWidthFactorMultiplier

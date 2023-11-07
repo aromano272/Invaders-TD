@@ -23,7 +23,7 @@ import com.andreromano.invaders.scenes.level.entities.GamePauseEntity
 import com.andreromano.invaders.scenes.level.entities.GameSpeedEntity
 import com.andreromano.invaders.scenes.level.entities.PathEntity
 import com.andreromano.invaders.scenes.level.entities.StartEntity
-import com.andreromano.invaders.scenes.level.entities.TurretEntity
+import com.andreromano.invaders.scenes.level.entities.TowerEntity
 import com.andreromano.invaders.scenes.level.entities.WallEntity
 import com.andreromano.invaders.scenes.level.entities.Waypoint
 import java.lang.Exception
@@ -94,7 +94,7 @@ class LevelScene(
         color = Color.YELLOW
     }
 
-    private val debugTurretTextPaint = Paint().apply {
+    private val debugTowerTextPaint = Paint().apply {
         style = Paint.Style.FILL
         textSize = 16f.toPx
         typeface = Typeface.DEFAULT_BOLD
@@ -242,7 +242,7 @@ class LevelScene(
                     null
                 }
 
-                if (entity is BuildableEntity || entity is TurretEntity) {
+                if (entity is BuildableEntity || entity is TowerEntity) {
                     levelState.selectedTileX = tileX
                     levelState.selectedTileY = tileY
                 }
@@ -332,9 +332,9 @@ class LevelScene(
             this,
             Vec2F(screenWidth / 2f, screenHeight - 200 / 2f),
              screenWidth, 200,
-            spawnTurret = { turret ->
-                levelState.currMoney -= turret.totalMoneySpent
-                levelState.entitiesMap[turret.tileY][turret.tileX] = turret
+            spawnTower = { tower ->
+                levelState.currMoney -= tower.totalMoneySpent
+                levelState.entitiesMap[tower.tileY][tower.tileX] = tower
             },
             spawnBullet = { bullet -> levelState.bulletEntities.add(bullet) }
         )
@@ -368,22 +368,22 @@ class LevelScene(
         if (savedGame != null) {
             levelState.currentWave = savedGame.currentWave
             levelState.currMoney = savedGame.currMoney
-            savedGame.placedTurrets.forEach { savedTurret ->
-                val target = levelState.entitiesMap[savedTurret.tileY][savedTurret.tileX]
+            savedGame.placedTowers.forEach { savedTower ->
+                val target = levelState.entitiesMap[savedTower.tileY][savedTower.tileX]
                 if (target is BuildableEntity) {
-                    val entity = TurretEntity(
+                    val entity = TowerEntity(
                         pos = target.pos,
-                        tileX = savedTurret.tileX,
-                        tileY = savedTurret.tileY,
+                        tileX = savedTower.tileX,
+                        tileY = savedTower.tileY,
                         width = target.width,
                         height = target.height,
-                        spec = savedTurret.spec,
+                        spec = savedTower.spec,
                         spawnBullet = { bullet -> levelState.bulletEntities.add(bullet) },
                     )
 
-                    entity.restoreUpgradeLevel(savedTurret.currLevel)
+                    entity.restoreUpgradeLevel(savedTower.currLevel)
 
-                    levelState.entitiesMap[savedTurret.tileY][savedTurret.tileX] = entity
+                    levelState.entitiesMap[savedTower.tileY][savedTower.tileX] = entity
                 }
             }
 
@@ -476,7 +476,7 @@ class LevelScene(
             canvas.drawRect(endRect, yellowPaint)
         }
 
-        (levelState.selectedEntity as? TurretEntity)?.let {
+        (levelState.selectedEntity as? TowerEntity)?.let {
             listOf(
                 "currShootDamage" to it.currShootDamage,
                 "currShootDelay" to it.currShootDelay,
@@ -484,7 +484,7 @@ class LevelScene(
                 "currRangeRadiusToWidthFactor" to it.currRangeRadiusToWidthFactor,
                 "currLevel" to it.currLevel,
             ).forEachIndexed { index, (key, value) ->
-                canvas.drawText("$key: $value", it.hitbox.left, it.hitbox.bottom + 40 + debugTurretTextPaint.textSize * index, debugTurretTextPaint)
+                canvas.drawText("$key: $value", it.hitbox.left, it.hitbox.bottom + 40 + debugTowerTextPaint.textSize * index, debugTowerTextPaint)
             }
         }
     }

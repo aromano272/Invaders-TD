@@ -28,7 +28,7 @@ class EnemyEntity(
     val destroyed: Boolean
         get() = killed || escaped
 
-    var withinTurretRange = false
+    var withinTowerRange = false
 
     private var currHealth = health
     private var currIncomingDamage = 0
@@ -40,7 +40,7 @@ class EnemyEntity(
         color = Color.CYAN
     }
 
-    private val withinTurretRangePaint = Paint().apply {
+    private val withinTowerRangePaint = Paint().apply {
         style = Paint.Style.FILL
         color = Color.RED
     }
@@ -90,8 +90,8 @@ class EnemyEntity(
 
     override fun render(canvas: Canvas) {
         canvas.drawOval(hitbox.scale(0.75f), paint)
-        if (withinTurretRange) {
-            canvas.drawOval(hitbox.scale(0.20f), withinTurretRangePaint)
+        if (withinTowerRange) {
+            canvas.drawOval(hitbox.scale(0.20f), withinTowerRangePaint)
         }
         if (currHealth < health) {
             val healthPercent = currHealth.toFloat() / health

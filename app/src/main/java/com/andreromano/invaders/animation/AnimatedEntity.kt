@@ -1,15 +1,10 @@
-package com.andreromano.invaders
+package com.andreromano.invaders.animation
 
-import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Rect
-
-data class AnimationSpec(
-    val bitmap: Bitmap,
-    val tileSize: Int,
-    val numColTiles: Int,
-    val durationMs: Int,
-)
+import com.andreromano.invaders.Entity
+import com.andreromano.invaders.PosMode
+import com.andreromano.invaders.Vec2F
+import com.andreromano.invaders.drawAnimationTile
 
 class AnimatedEntity(
     pos: Vec2F,
@@ -20,20 +15,20 @@ class AnimatedEntity(
     height = spec.tileSize,
     posMode = PosMode.CENTER,
 ) {
-    private val delayBetweenFrames = spec.durationMs / spec.numColTiles
+    private val delayBetweenFrames = spec.durationMs / spec.bitmaps.size
 
     private var currTime = 0L
-    private var nextFrameTime = 0L
+    private var nextFrameTime = delayBetweenFrames
 
     var currTileCol = 0
 
-    var rotationDeg = 0
+    var rotationDeg = 0f
 
     override fun update(deltaTime: Int) {
         val newTime = currTime + deltaTime
         val timeDiff = newTime - nextFrameTime
         if (timeDiff >= 0) {
-            currTileCol = (currTileCol + 1) % spec.tileSize
+            currTileCol = (currTileCol + 1) % spec.bitmaps.size
             nextFrameTime += delayBetweenFrames
         }
         currTime = newTime

@@ -16,7 +16,7 @@ class BottomMenuEntity(
     pos: Vec2F,
     width: Int,
     height: Int,
-    private val spawnTurret: (TurretEntity) -> Unit,
+    private val spawnTower: (TowerEntity) -> Unit,
     private val spawnBullet: (BulletEntity) -> Unit
 ) : Entity(
     pos = pos,
@@ -24,21 +24,21 @@ class BottomMenuEntity(
     height = height,
 ) {
 
-    private val buildTurretEntities = TurretSpec.values().mapIndexed { index, spec ->
+    private val buildTowerEntities = TowerSpec.values().mapIndexed { index, spec ->
         val itemWidth = height
         val x = (itemWidth / 2f) + itemWidth * index.toFloat()
         val itemPos = Vec2F(x, pos.y)
-        BuildTurretMenuItemEntity(
+        BuildTowerMenuItemEntity(
             scene,
             itemPos,
             itemWidth, height,
             spec,
-            spawnTurret,
+            spawnTower,
             spawnBullet
         )
     }
 
-    private val turretSelectedEntities = run {
+    private val towerSelectedEntities = run {
         val itemWidth = height
 
         val itemCount = 2
@@ -46,20 +46,20 @@ class BottomMenuEntity(
         val startPos = Vec2F(x, pos.y)
 
         listOf(
-            TurretSelectedMenuItemEntity(
+            TowerSelectedMenuItemEntity(
                 scene,
                 startPos,
                 itemWidth, height, true,
             ),
-            TurretSelectedMenuItemEntity(
+            TowerSelectedMenuItemEntity(
                 scene,
                 startPos + Vec2F(itemWidth.toFloat(), 0f),
                 itemWidth, height, false
             ),
         )
     }
-    private val turretSelectedUpgradeEntity = turretSelectedEntities[0]
-    private val turretSelectedSellEntity = turretSelectedEntities[1]
+    private val towerSelectedUpgradeEntity = towerSelectedEntities[0]
+    private val towerSelectedSellEntity = towerSelectedEntities[1]
 
     private val paint = Paint().apply {
         style = Paint.Style.FILL
@@ -70,13 +70,13 @@ class BottomMenuEntity(
         val selectedEntity = levelState.selectedEntity ?: return
 
         when (selectedEntity) {
-            is BuildableEntity -> buildTurretEntities.forEach { entity ->
+            is BuildableEntity -> buildTowerEntities.forEach { entity ->
                 entity.update(deltaTime)
             }
-            is TurretEntity -> {
-                if (!selectedEntity.isMaxLevel) turretSelectedUpgradeEntity.update(deltaTime)
-                turretSelectedSellEntity.update(deltaTime)
-                turretSelectedEntities.forEach { entity ->
+            is TowerEntity -> {
+                if (!selectedEntity.isMaxLevel) towerSelectedUpgradeEntity.update(deltaTime)
+                towerSelectedSellEntity.update(deltaTime)
+                towerSelectedEntities.forEach { entity ->
                     entity.update(deltaTime)
                 }
             }
@@ -88,27 +88,27 @@ class BottomMenuEntity(
 
         canvas.drawRect(hitbox, paint)
         when (selectedEntity) {
-             is BuildableEntity -> buildTurretEntities.forEach { entity ->
+             is BuildableEntity -> buildTowerEntities.forEach { entity ->
                  entity.render(canvas)
              }
-             is TurretEntity -> {
-                 if (!selectedEntity.isMaxLevel) turretSelectedUpgradeEntity.render(canvas)
-                 turretSelectedSellEntity.render(canvas)
+             is TowerEntity -> {
+                 if (!selectedEntity.isMaxLevel) towerSelectedUpgradeEntity.render(canvas)
+                 towerSelectedSellEntity.render(canvas)
              }
         }
     }
 
-    // TODO(aromano): Would be cool to have the turret items be placed in this entity
+    // TODO(aromano): Would be cool to have the tower items be placed in this entity
     //                with this menu coordinates space rather than using world space
 }
 
-class BuildTurretMenuItemEntity(
+class BuildTowerMenuItemEntity(
     scene: Scene,
     pos: Vec2F,
     width: Int,
     height: Int,
-    private val spec: TurretSpec,
-    private val spawnTurret: (TurretEntity) -> Unit,
+    private val spec: TowerSpec,
+    private val spawnTower: (TowerEntity) -> Unit,
     private val spawnBullet: (BulletEntity) -> Unit,
 ) : UiEntity(
     scene = scene,
@@ -132,7 +132,7 @@ class BuildTurretMenuItemEntity(
     override fun onClick(x: Float, y: Float): Boolean {
         if (levelState.currMoney < spec.cost) return false
         val buildableEntity = levelState.selectedEntity as? BuildableEntity ?: return false
-        val turret = TurretEntity(
+        val tower = TowerEntity(
             buildableEntity.pos,
             buildableEntity.tileX,
             buildableEntity.tileY,
@@ -141,7 +141,7 @@ class BuildTurretMenuItemEntity(
             spec,
             spawnBullet
         )
-        spawnTurret(turret)
+        spawnTower(tower)
         return true
     }
 
@@ -158,7 +158,7 @@ class BuildTurretMenuItemEntity(
     }
 }
 
-class TurretSelectedMenuItemEntity(
+class TowerSelectedMenuItemEntity(
     scene: Scene,
     pos: Vec2F,
     width: Int,
@@ -173,7 +173,7 @@ class TurretSelectedMenuItemEntity(
 
     var enabled = true
 
-    private var entity: TurretEntity? = null
+    private var entity: TowerEntity? = null
 
     private val paint = Paint().apply {
         style = Paint.Style.FILL
@@ -194,7 +194,7 @@ class TurretSelectedMenuItemEntity(
 
     override fun onClick(x: Float, y: Float): Boolean {
         if (!enabled) return false
-        val entity = levelState.selectedEntity as? TurretEntity ?: return false
+        val entity = levelState.selectedEntity as? TowerEntity ?: return false
         if (isMenuItemUpgrade) {
             entity.upgrade()
         } else {
@@ -205,7 +205,7 @@ class TurretSelectedMenuItemEntity(
 
     override fun update(deltaTime: Int) {
         super.update(deltaTime)
-        entity = (levelState.selectedEntity as? TurretEntity)
+        entity = (levelState.selectedEntity as? TowerEntity)
         val entity = entity ?: return
         if (isMenuItemUpgrade) {
             enabled = levelState.currMoney >= entity.upgradeCost
