@@ -11,6 +11,7 @@ import androidx.core.graphics.toRectF
 import com.andreromano.invaders.animation.AnimatedEntity
 import com.andreromano.invaders.animation.AnimationSpec
 import com.andreromano.invaders.extensions.copy
+import com.andreromano.invaders.extensions.scale
 import com.andreromano.invaders.scenes.level.entities.TowerEntity
 import com.andreromano.invaders.scenes.level.entities.TowerSpec
 import kotlin.math.abs
@@ -36,34 +37,133 @@ object TileAtlas {
     var terrainTileSize: Int = -1
 
     fun initialise(context: Context) {
-        terrainBitmap = BitmapFactory.decodeResource(
-            context.resources,
-            R.drawable.grass_tileset,
-            BitmapFactory.Options().apply {
-                inScaled = false
-            }
-        )
+        terrainBitmap = context.decodeBitmap(R.drawable.grass_tileset)
         terrainTileSize = terrainBitmap.height / terrainNumRowTiles
 
-        tower1Bitmap = BitmapFactory.decodeResource(
-            context.resources,
-            R.drawable.tower_01,
-            BitmapFactory.Options().apply {
-                inScaled = false
-            }
-        )
+        tower1Bitmap = context.decodeBitmap(R.drawable.tower_01)
         towerTileWidth = tower1Bitmap.width / towerNumColTiles
         towerTileHeight = tower1Bitmap.height
 
-        tower1WeaponAnimBitmap = BitmapFactory.decodeResource(
-            context.resources,
-            R.drawable.tower_01___level_01___weapon,
-            BitmapFactory.Options().apply {
-                inScaled = false
-            }
-        )
+        tower1WeaponAnimBitmap = context.decodeBitmap(R.drawable.tower_01___level_01___weapon)
         towerWeaponAnimTileSize = tower1WeaponAnimBitmap.width / towerWeaponAnimNumRowTiles
+
+        initialiseTowers(context)
     }
+
+    val towerWeaponBitmapScaleFactor = 1.5f
+    val towerWeaponBitmapYOffsetPercentOfTowerHeightByLevel: Map<Int, Float> = mapOf(
+        1 to 0.70f,
+        2 to 0.75f,
+        3 to 0.80f,
+    )
+
+    val towerBitmaps = mutableMapOf<TowerType, Bitmap>()
+    val towerWeaponBitmaps = mutableMapOf<Pair<TowerType, Int>, Bitmap>()
+    val towerWeaponAnimSpecs = mutableMapOf<Pair<TowerType, Int>, AnimationSpec>()
+    val towerProjectileBitmaps = mutableMapOf<Pair<TowerType, Int>, Bitmap>()
+    val towerProjectileImpactBitmaps = mutableMapOf<Pair<TowerType, Int>, Bitmap>()
+    private fun initialiseTowers(context: Context) {
+        towerBitmaps[TowerType.TOWER_1] = context.decodeBitmap(R.drawable.tower_01)
+        towerProjectileBitmaps[TowerType.TOWER_1 to 1] = context.decodeBitmap(R.drawable.tower_01___level_01___projectile)
+        towerWeaponBitmaps[TowerType.TOWER_1 to 1] = context.decodeBitmap(R.drawable.tower_01___level_01___weapon)
+        towerProjectileBitmaps[TowerType.TOWER_1 to 2] = context.decodeBitmap(R.drawable.tower_01___level_02___projectile)
+        towerWeaponBitmaps[TowerType.TOWER_1 to 2] = context.decodeBitmap(R.drawable.tower_01___level_02___weapon)
+        towerProjectileBitmaps[TowerType.TOWER_1 to 3] = context.decodeBitmap(R.drawable.tower_01___level_03___projectile)
+        towerWeaponBitmaps[TowerType.TOWER_1 to 3] = context.decodeBitmap(R.drawable.tower_01___level_03___weapon)
+        towerProjectileImpactBitmaps[TowerType.TOWER_1 to 1] = context.decodeBitmap(R.drawable.tower_01___weapon___impact)
+        towerProjectileImpactBitmaps[TowerType.TOWER_1 to 2] = context.decodeBitmap(R.drawable.tower_01___weapon___impact)
+        towerProjectileImpactBitmaps[TowerType.TOWER_1 to 3] = context.decodeBitmap(R.drawable.tower_01___weapon___impact)
+        towerBitmaps[TowerType.TOWER_2] = context.decodeBitmap(R.drawable.tower_02)
+        towerProjectileBitmaps[TowerType.TOWER_2 to 1] = context.decodeBitmap(R.drawable.tower_02___level_01___projectile)
+        towerProjectileImpactBitmaps[TowerType.TOWER_2 to 1] = context.decodeBitmap(R.drawable.tower_02___level_01___projectile___impact)
+        towerWeaponBitmaps[TowerType.TOWER_2 to 1] = context.decodeBitmap(R.drawable.tower_02___level_01___weapon)
+        towerProjectileBitmaps[TowerType.TOWER_2 to 2] = context.decodeBitmap(R.drawable.tower_02___level_02___projectile)
+        towerProjectileImpactBitmaps[TowerType.TOWER_2 to 2] = context.decodeBitmap(R.drawable.tower_02___level_02___projectile___impact)
+        towerWeaponBitmaps[TowerType.TOWER_2 to 2] = context.decodeBitmap(R.drawable.tower_02___level_02___weapon)
+        towerProjectileBitmaps[TowerType.TOWER_2 to 3] = context.decodeBitmap(R.drawable.tower_02___level_03___projectile)
+        towerProjectileImpactBitmaps[TowerType.TOWER_2 to 3] = context.decodeBitmap(R.drawable.tower_02___level_03___projectile___impact)
+        towerWeaponBitmaps[TowerType.TOWER_2 to 3] = context.decodeBitmap(R.drawable.tower_02___level_03___weapon)
+        towerBitmaps[TowerType.TOWER_3] = context.decodeBitmap(R.drawable.tower_03)
+        towerProjectileBitmaps[TowerType.TOWER_3 to 1] = context.decodeBitmap(R.drawable.tower_03___level_01___projectile)
+        towerProjectileImpactBitmaps[TowerType.TOWER_3 to 1] = context.decodeBitmap(R.drawable.tower_03___level_01___projectile___impact)
+        towerWeaponBitmaps[TowerType.TOWER_3 to 1] = context.decodeBitmap(R.drawable.tower_03___level_01___weapon)
+        towerProjectileBitmaps[TowerType.TOWER_3 to 2] = context.decodeBitmap(R.drawable.tower_03___level_02___projectile)
+        towerProjectileImpactBitmaps[TowerType.TOWER_3 to 2] = context.decodeBitmap(R.drawable.tower_03___level_02___projectile___impact)
+        towerWeaponBitmaps[TowerType.TOWER_3 to 2] = context.decodeBitmap(R.drawable.tower_03___level_02___weapon)
+        towerProjectileBitmaps[TowerType.TOWER_3 to 3] = context.decodeBitmap(R.drawable.tower_03___level_03___projectile)
+        towerProjectileImpactBitmaps[TowerType.TOWER_3 to 3] = context.decodeBitmap(R.drawable.tower_03___level_03___projectile___impact)
+        towerWeaponBitmaps[TowerType.TOWER_3 to 3] = context.decodeBitmap(R.drawable.tower_03___level_03___weapon)
+        towerBitmaps[TowerType.TOWER_4] = context.decodeBitmap(R.drawable.tower_04)
+        towerProjectileBitmaps[TowerType.TOWER_4 to 1] = context.decodeBitmap(R.drawable.tower_04___level_01___projectile)
+        towerProjectileImpactBitmaps[TowerType.TOWER_4 to 1] = context.decodeBitmap(R.drawable.tower_04___level_01___projectile___impact)
+        towerWeaponBitmaps[TowerType.TOWER_4 to 1] = context.decodeBitmap(R.drawable.tower_04___level_01___weapon)
+        towerProjectileBitmaps[TowerType.TOWER_4 to 2] = context.decodeBitmap(R.drawable.tower_04___level_02___projectile)
+        towerProjectileImpactBitmaps[TowerType.TOWER_4 to 2] = context.decodeBitmap(R.drawable.tower_04___level_02___projectile___impact)
+        towerWeaponBitmaps[TowerType.TOWER_4 to 2] = context.decodeBitmap(R.drawable.tower_04___level_02___weapon)
+        towerProjectileBitmaps[TowerType.TOWER_4 to 3] = context.decodeBitmap(R.drawable.tower_04___level_03___projectile)
+        towerProjectileImpactBitmaps[TowerType.TOWER_4 to 3] = context.decodeBitmap(R.drawable.tower_04___level_03___projectile___impact)
+        towerWeaponBitmaps[TowerType.TOWER_4 to 3] = context.decodeBitmap(R.drawable.tower_04___level_03___weapon)
+        towerBitmaps[TowerType.TOWER_5] = context.decodeBitmap(R.drawable.tower_05)
+        towerProjectileBitmaps[TowerType.TOWER_5 to 1] = context.decodeBitmap(R.drawable.tower_05___level_01___projectile)
+        towerProjectileImpactBitmaps[TowerType.TOWER_5 to 1] = context.decodeBitmap(R.drawable.tower_05___level_01___projectile___impact)
+        towerWeaponBitmaps[TowerType.TOWER_5 to 1] = context.decodeBitmap(R.drawable.tower_05___level_01___weapon)
+        towerProjectileBitmaps[TowerType.TOWER_5 to 2] = context.decodeBitmap(R.drawable.tower_05___level_02___projectile)
+        towerProjectileImpactBitmaps[TowerType.TOWER_5 to 2] = context.decodeBitmap(R.drawable.tower_05___level_02___projectile___impact)
+        towerWeaponBitmaps[TowerType.TOWER_5 to 2] = context.decodeBitmap(R.drawable.tower_05___level_02___weapon)
+        towerProjectileBitmaps[TowerType.TOWER_5 to 3] = context.decodeBitmap(R.drawable.tower_05___level_03___projectile)
+        towerProjectileImpactBitmaps[TowerType.TOWER_5 to 3] = context.decodeBitmap(R.drawable.tower_05___level_03___projectile___impact)
+        towerWeaponBitmaps[TowerType.TOWER_5 to 3] = context.decodeBitmap(R.drawable.tower_05___level_03___weapon)
+        towerBitmaps[TowerType.TOWER_6] = context.decodeBitmap(R.drawable.tower_06)
+        towerProjectileBitmaps[TowerType.TOWER_6 to 1] = context.decodeBitmap(R.drawable.tower_06___level_01___projectile)
+        towerWeaponBitmaps[TowerType.TOWER_6 to 1] = context.decodeBitmap(R.drawable.tower_06___level_01___weapon)
+        towerProjectileBitmaps[TowerType.TOWER_6 to 2] = context.decodeBitmap(R.drawable.tower_06___level_02___projectile)
+        towerWeaponBitmaps[TowerType.TOWER_6 to 2] = context.decodeBitmap(R.drawable.tower_06___level_02___weapon)
+        towerProjectileBitmaps[TowerType.TOWER_6 to 3] = context.decodeBitmap(R.drawable.tower_06___level_03___projectile)
+        towerWeaponBitmaps[TowerType.TOWER_6 to 3] = context.decodeBitmap(R.drawable.tower_06___level_03___weapon)
+        towerProjectileImpactBitmaps[TowerType.TOWER_6 to 1] = context.decodeBitmap(R.drawable.tower_06___weapon___impact)
+        towerProjectileImpactBitmaps[TowerType.TOWER_6 to 2] = context.decodeBitmap(R.drawable.tower_06___weapon___impact)
+        towerProjectileImpactBitmaps[TowerType.TOWER_6 to 3] = context.decodeBitmap(R.drawable.tower_06___weapon___impact)
+        towerBitmaps[TowerType.TOWER_7] = context.decodeBitmap(R.drawable.tower_07)
+        towerWeaponBitmaps[TowerType.TOWER_7 to 1] = context.decodeBitmap(R.drawable.tower_07___level_01___weapon)
+        towerWeaponBitmaps[TowerType.TOWER_7 to 2] = context.decodeBitmap(R.drawable.tower_07___level_02___weapon)
+        towerWeaponBitmaps[TowerType.TOWER_7 to 3] = context.decodeBitmap(R.drawable.tower_07___level_03___weapon)
+        towerProjectileBitmaps[TowerType.TOWER_7 to 1] = context.decodeBitmap(R.drawable.tower_07___level_x___projectile)
+        towerProjectileBitmaps[TowerType.TOWER_7 to 2] = context.decodeBitmap(R.drawable.tower_07___level_x___projectile)
+        towerProjectileBitmaps[TowerType.TOWER_7 to 3] = context.decodeBitmap(R.drawable.tower_07___level_x___projectile)
+        towerProjectileImpactBitmaps[TowerType.TOWER_7 to 1] = context.decodeBitmap(R.drawable.tower_07___level_x___projectile___impact)
+        towerProjectileImpactBitmaps[TowerType.TOWER_7 to 2] = context.decodeBitmap(R.drawable.tower_07___level_x___projectile___impact)
+        towerProjectileImpactBitmaps[TowerType.TOWER_7 to 3] = context.decodeBitmap(R.drawable.tower_07___level_x___projectile___impact)
+        towerBitmaps[TowerType.TOWER_8] = context.decodeBitmap(R.drawable.tower_08)
+        towerProjectileBitmaps[TowerType.TOWER_8 to 1] = context.decodeBitmap(R.drawable.tower_08___level_01___projectile)
+        towerWeaponBitmaps[TowerType.TOWER_8 to 1] = context.decodeBitmap(R.drawable.tower_08___level_01___weapon)
+        towerProjectileBitmaps[TowerType.TOWER_8 to 2] = context.decodeBitmap(R.drawable.tower_08___level_02___projectile)
+        towerWeaponBitmaps[TowerType.TOWER_8 to 2] = context.decodeBitmap(R.drawable.tower_08___level_02___weapon)
+        towerProjectileBitmaps[TowerType.TOWER_8 to 3] = context.decodeBitmap(R.drawable.tower_08___level_03___projectile)
+        towerWeaponBitmaps[TowerType.TOWER_8 to 3] = context.decodeBitmap(R.drawable.tower_08___level_03___weapon)
+
+        towerWeaponBitmaps.forEach { (key, bitmap) ->
+            towerWeaponAnimSpecs[key] = genericAnimSpec(bitmap, key)
+        }
+    }
+
+    private fun Context.decodeBitmap(resId: Int) = BitmapFactory.decodeResource(
+        this.resources,
+        resId,
+        BitmapFactory.Options().apply {
+            inScaled = false
+        }
+    )
+}
+
+enum class TowerType {
+    TOWER_1,
+    TOWER_2,
+    TOWER_3,
+    TOWER_4,
+    TOWER_5,
+    TOWER_6,
+    TOWER_7,
+    TOWER_8,
 }
 
 enum class TerrainType {
@@ -175,7 +275,23 @@ val tower1WeaponAnim: AnimationSpec by lazy {
     )
 }
 
-fun Canvas.drawAnimationTile(entity: AnimatedEntity, destRect: RectF) {
+private fun genericAnimSpec(bitmap: Bitmap, debugInfo: Pair<TowerType, Int>): AnimationSpec {
+    check(bitmap.width > bitmap.height)
+    check(bitmap.width % bitmap.height == 0) {
+        "$debugInfo"
+    }
+    val numFrames = bitmap.width / bitmap.height
+    val tileSize = bitmap.height
+    val durationMs = 1000
+    return AnimationSpec(
+        bitmap = bitmap,
+        numFrames = numFrames,
+        tileSize = tileSize,
+        durationMs = durationMs,
+    )
+}
+
+fun Canvas.drawAnimationTile(entity: AnimatedEntity, destRect: RectF, scale: Float) {
     val sourceRect = Rect(
         0,
         0,
@@ -184,8 +300,8 @@ fun Canvas.drawAnimationTile(entity: AnimatedEntity, destRect: RectF) {
     )
 
     val matrix = Matrix().apply {
-        setRectToRect(sourceRect.toRectF(), destRect, Matrix.ScaleToFit.CENTER)
-        postRotate(entity.rotationDeg, destRect.centerX(), destRect.centerY())
+        setRectToRect(sourceRect.toRectF(), destRect.scale(scale), Matrix.ScaleToFit.CENTER)
+        postRotate(entity.rotationTetha, destRect.centerX(), destRect.centerY())
     }
 
     this.drawBitmap(

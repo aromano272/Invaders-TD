@@ -3,12 +3,14 @@ package com.andreromano.invaders.animation
 import android.graphics.Canvas
 import com.andreromano.invaders.Entity
 import com.andreromano.invaders.PosMode
+import com.andreromano.invaders.TileAtlas
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.drawAnimationTile
 
-class AnimatedEntity(
+open class AnimatedEntity(
     pos: Vec2F,
     val spec: AnimationSpec,
+    val scale: Float = 1f
 ) : Entity(
     pos = pos,
     width = spec.tileSize,
@@ -22,7 +24,7 @@ class AnimatedEntity(
 
     var currTileCol = 0
 
-    var rotationDeg = 0f
+    var rotationTetha = 0f
 
     override fun update(deltaTime: Int) {
         val newTime = currTime + deltaTime
@@ -35,6 +37,6 @@ class AnimatedEntity(
     }
 
     override fun render(canvas: Canvas) {
-        canvas.drawAnimationTile(this, hitbox)
+        canvas.drawAnimationTile(this, hitbox, scale)
     }
 }

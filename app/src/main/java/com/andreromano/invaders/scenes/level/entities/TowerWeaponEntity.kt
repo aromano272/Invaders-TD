@@ -3,34 +3,25 @@ package com.andreromano.invaders.scenes.level.entities
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import com.andreromano.invaders.TerrainType
 import com.andreromano.invaders.TileAtlas
-import com.andreromano.invaders.TiledEntity
 import com.andreromano.invaders.TowerType
 import com.andreromano.invaders.scenes.level.levelState
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.angleBetweenYAnd
 import com.andreromano.invaders.animation.AnimatedEntity
+import com.andreromano.invaders.animation.AnimationSpec
 import com.andreromano.invaders.drawTerrainTile
 import com.andreromano.invaders.drawTowerEntity
 import com.andreromano.invaders.extensions.scale
-import com.andreromano.invaders.tower1WeaponAnim
 
-class TowerEntity(
+class TowerWeaponEntity(
     pos: Vec2F,
-    tileX: Int,
-    tileY: Int,
-    width: Int,
-    height: Int,
-    val spec: TowerSpec,
+    animationSpec: AnimationSpec,
+    val tower: TowerEntity,
     private val spawnBullet: (BulletEntity) -> Unit
-) : TiledEntity(
+) : AnimatedEntity(
     pos = pos,
-    tileX = tileX,
-    tileY = tileY,
-    width = width,
-    height = height,
-    terrainType = TerrainType.GRASS
+    spec = animationSpec,
 ) {
     private var weaponEntityLevel = -1
     private lateinit var weaponEntity: AnimatedEntity

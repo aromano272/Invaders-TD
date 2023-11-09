@@ -1,5 +1,6 @@
 package com.andreromano.invaders
 
+import kotlin.math.atan2
 import kotlin.math.sqrt
 
 data class Vec2F(
@@ -44,8 +45,13 @@ operator fun Float.times(vec: Vec2F): Vec2F = vec * this
 fun dot(a: Vec2F, b: Vec2F): Float {
     // TODO(aromano): Not sure if this is actually true, Freya mentioned that in dot(a, b), one of the vectors needs to be normalized
     //                Actually there are cases where we don't want this but it's move advanced cases so ill keep this here for now
-    check(a.magnitude == 1f || b.magnitude == 1f)
+//    check(a.magnitude == 1f || b.magnitude == 1f)
     return a.x * b.x + a.y * b.y
+}
+
+fun angleBetweenYAnd(a: Vec2F): Float {
+    val angle = 90f + Math.toDegrees(atan2(a.y, a.x).toDouble()).toFloat()
+    return angle
 }
 
 fun reflectByNormal(ray: Vec2F, normal: Vec2F): Vec2F {
