@@ -166,6 +166,12 @@ enum class TowerType {
     TOWER_8,
 }
 
+fun TowerSpec.toAtlasTowerType(): TowerType = when (this) {
+    TowerSpec.FAST -> TowerType.TOWER_1
+    TowerSpec.STRONG -> TowerType.TOWER_2
+    TowerSpec.SPREADER -> TowerType.TOWER_7
+}
+
 enum class TerrainType {
     DIRT,
     GRASS,
@@ -266,15 +272,6 @@ private fun Canvas.drawTerrainTile(tilePos: TilePos, destRect: RectF) {
     )
 }
 
-val tower1WeaponAnim: AnimationSpec by lazy {
-    AnimationSpec(
-        bitmap = TileAtlas.tower1WeaponAnimBitmap,
-        numFrames = TileAtlas.towerWeaponAnimNumRowTiles,
-        tileSize = TileAtlas.towerWeaponAnimTileSize,
-        durationMs = 1000,
-    )
-}
-
 private fun genericAnimSpec(bitmap: Bitmap, debugInfo: Pair<TowerType, Int>): AnimationSpec {
     check(bitmap.width > bitmap.height)
     check(bitmap.width % bitmap.height == 0) {
@@ -282,12 +279,10 @@ private fun genericAnimSpec(bitmap: Bitmap, debugInfo: Pair<TowerType, Int>): An
     }
     val numFrames = bitmap.width / bitmap.height
     val tileSize = bitmap.height
-    val durationMs = 1000
     return AnimationSpec(
         bitmap = bitmap,
         numFrames = numFrames,
         tileSize = tileSize,
-        durationMs = durationMs,
     )
 }
 
@@ -305,7 +300,7 @@ fun Canvas.drawAnimationTile(entity: AnimatedEntity, destRect: RectF, scale: Flo
     }
 
     this.drawBitmap(
-        entity.spec.bitmaps[entity.currTileCol],
+        entity.spec.bitmaps[entity.currFrame],
         matrix,
         null
     )

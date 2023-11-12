@@ -9,9 +9,9 @@ enum class TowerSpec(
     val rangeRadiusToWidthFactor: Float,
     val upgradeSpec: UpgradeSpec,
 ) {
-    FAST(80, 200, 50, 2f, UpgradeSpec.FAST),
-    STRONG(300, 600, 100, 4f, UpgradeSpec.STRONG),
-    SPREADER(100, 300, 150, 2f, UpgradeSpec.SPREADER),
+    FAST(120, 600, 50, 2f, UpgradeSpec.FAST),
+    STRONG(300, 1400, 100, 4f, UpgradeSpec.STRONG),
+    SPREADER(100, 800, 150, 2f, UpgradeSpec.SPREADER),
 }
 
 val TowerSpec.color: Int
@@ -29,9 +29,9 @@ enum class UpgradeSpec(
     val additionalBullets: Int,
     val maxLevel: Int
 ) {
-    FAST(1.5f, 0.5f, 2f, 1.05f, 0, 4),
-    STRONG(2f, 0.8f, 2f, 1.1f, 0, 4),
-    SPREADER(1.2f, 0.8f, 2f, 1.05f, 1, 4),
+    FAST(1.75f, 0.75f, 2f, 1.05f, 0, 3),
+    STRONG(2.25f, 0.8f, 2f, 1.1f, 0, 3),
+    SPREADER(1.2f, 0.8f, 2f, 1.05f, 1, 3),
 }
 
 fun TowerSpec.totalMoneySpentForLevel(level: Int): Int {

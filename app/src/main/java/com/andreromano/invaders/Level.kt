@@ -47,9 +47,9 @@ enum class Level(
 
 private fun TEST_WAVE(scale: Float) = Wave(
     enemyHealth = (100 * scale).roundToInt(),
-    enemySpeed = 0.6f,
-    enemyCount = 50,
-    enemySpawnDelay = 150,
+    enemySpeed = 0.3f,
+    enemyCount = 30,
+    enemySpawnDelay = 350,
     enemyMoney = (10 * scale).roundToInt(),
 )
 

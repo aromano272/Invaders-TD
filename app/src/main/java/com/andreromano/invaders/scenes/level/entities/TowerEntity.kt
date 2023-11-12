@@ -9,12 +9,11 @@ import com.andreromano.invaders.TiledEntity
 import com.andreromano.invaders.TowerType
 import com.andreromano.invaders.scenes.level.levelState
 import com.andreromano.invaders.Vec2F
-import com.andreromano.invaders.angleBetweenYAnd
 import com.andreromano.invaders.animation.AnimatedEntity
 import com.andreromano.invaders.drawTerrainTile
 import com.andreromano.invaders.drawTowerEntity
 import com.andreromano.invaders.extensions.scale
-import com.andreromano.invaders.tower1WeaponAnim
+import com.andreromano.invaders.toAtlasTowerType
 
 class TowerEntity(
     pos: Vec2F,
@@ -32,7 +31,6 @@ class TowerEntity(
     height = height,
     terrainType = TerrainType.GRASS
 ) {
-    private var weaponEntityLevel = -1
     private lateinit var weaponEntity: AnimatedEntity
 
     private val upgradeSpec: UpgradeSpec = spec.upgradeSpec
@@ -70,8 +68,9 @@ class TowerEntity(
         color = Color.RED
     }
 
-    var enemyPos: Vec2F = Vec2F.zero()
-    var towerToEnemy: Vec2F = Vec2F.zero()
+    init {
+        initialiseWeaponEntity()
+    }
 
     fun upgrade() {
         if (isMaxLevel) return
@@ -84,6 +83,7 @@ class TowerEntity(
         currRangeRadiusToWidthFactor *= upgradeSpec.rangeRadiusToWidthFactorMultiplier
         upgradeCost = (upgradeCost * upgradeSpec.upgradeCostMultiplier).toInt()
         currLevel++
+        initialiseWeaponEntity()
     }
 
     fun restoreUpgradeLevel(level: Int) {
@@ -93,6 +93,7 @@ class TowerEntity(
         currRangeRadiusToWidthFactor *= spec.rangeRadiusToWidthFactorForLevel(level)
         upgradeCost = spec.upgradeCostForLevel(level)
         currLevel = level
+        initialiseWeaponEntity()
     }
 
     fun sell() {
@@ -100,58 +101,22 @@ class TowerEntity(
         levelState.entitiesMap[tileY][tileX] = BuildableEntity(pos, tileX, tileY, width, height)
     }
 
-    override fun update(deltaTime: Int) {
-        initialiseWeaponEntityIfNeeded()
-        weaponEntity.update(deltaTime)
-        bulletSpawnDelay -= deltaTime
-
-        val enemies = levelState.enemyEntities
-        val enemiesWithinRange = enemies.filter { enemy ->
-            if (enemy.willDieFromIncomingDamage()) return@filter false
-
-            enemyPos = enemy.pos
-            towerToEnemy = enemy.pos - this.pos
-            val distanceToTower = towerToEnemy.magnitude
-            val enemyWithinTowerRange = distanceToTower < rangeRadius
-            enemyWithinTowerRange
-        }
-        if (enemiesWithinRange.isEmpty()) return
-        val firstEnemy = enemiesWithinRange.first()
-        val posDifferenceToEnemy = firstEnemy.pos - pos
-        val towerToEnemyDirNorm = posDifferenceToEnemy.normalized()
-        weaponEntity.rotationTetha = angleBetweenYAnd(towerToEnemyDirNorm)
-        weaponEntity.update(deltaTime)
-
-        if (bulletSpawnDelay > 0) return
-        bulletSpawnDelay = currShootDelay
-
-        val getEnemyById: (String) -> EnemyEntity? = { id ->
-            levelState.enemyEntities.find { it.id == id }
-        }
-
-        if (isSpreader) {
-            val targetEnemies = enemiesWithinRange.shuffled().take(4 )
-
-            targetEnemies.forEach { enemy ->
-                val bullet = BulletEntity(pos,  width, height, currShootDamage, enemy.id, 10, getEnemyById)
-                enemy.addIncomingDamage(currShootDamage)
-                spawnBullet(bullet)
-            }
-        } else {
-            val bullet = BulletEntity(pos, width, height, currShootDamage, firstEnemy.id, 10, getEnemyById)
-            firstEnemy.addIncomingDamage(currShootDamage)
-            spawnBullet(bullet)
-        }
+    private fun initialiseWeaponEntity() {
+        weaponEntity = TowerWeaponEntity(
+            pos = pos - Vec2F(0f, height.toFloat() * TileAtlas.towerWeaponBitmapYOffsetPercentOfTowerHeightByLevel[currLevel]!!),
+            animationSpec = TileAtlas.towerWeaponAnimSpecs[spec.toAtlasTowerType() to currLevel]!!,
+            scale = TileAtlas.towerWeaponBitmapScaleFactor,
+            towerPos = pos,
+            towerSpec = spec,
+            shootDamage = currShootDamage,
+            shootDelay = currShootDelay,
+            rangeRadius = rangeRadius,
+            spawnBullet = spawnBullet,
+        )
     }
 
-    private fun initialiseWeaponEntityIfNeeded() {
-        if (weaponEntityLevel == currLevel) return
-        weaponEntity = AnimatedEntity(
-            pos - Vec2F(0f, height.toFloat() * TileAtlas.towerWeaponBitmapYOffsetPercentOfTowerHeightByLevel[currLevel]!!),
-            TileAtlas.towerWeaponAnimSpecs[TowerType.TOWER_1 to currLevel]!!,
-            TileAtlas.towerWeaponBitmapScaleFactor
-        )
-        weaponEntityLevel = currLevel
+    override fun update(deltaTime: Int) {
+        weaponEntity.update(deltaTime)
     }
 
     override fun render(canvas: Canvas) {

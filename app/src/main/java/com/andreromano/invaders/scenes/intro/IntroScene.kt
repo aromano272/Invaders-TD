@@ -18,8 +18,6 @@ import com.andreromano.invaders.extensions.toPx
 import com.andreromano.invaders.scenes.editor.EditorScene
 import com.andreromano.invaders.scenes.level.LevelScene
 import com.andreromano.invaders.scenes.level.SaveableLevelState
-import com.andreromano.invaders.scenes.level.drawDebugRect
-import com.andreromano.invaders.tower1WeaponAnim
 
 class IntroScene(
     game: Game,
