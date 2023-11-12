@@ -4,9 +4,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Rect
 import android.graphics.RectF
+import androidx.core.graphics.get
 import androidx.core.graphics.toRectF
 import com.andreromano.invaders.animation.AnimatedEntity
 import com.andreromano.invaders.animation.AnimationSpec
@@ -15,23 +17,11 @@ import com.andreromano.invaders.extensions.scale
 import com.andreromano.invaders.scenes.level.entities.TowerEntity
 import com.andreromano.invaders.scenes.level.entities.TowerSpec
 import kotlin.math.abs
+import kotlin.system.measureTimeMillis
 
 object TileAtlas {
-    lateinit var tower1Bitmap: Bitmap
-        private set
-
     lateinit var terrainBitmap: Bitmap
         private set
-
-    lateinit var tower1WeaponAnimBitmap: Bitmap
-        private set
-
-    private val towerNumColTiles = 3
-    var towerTileWidth: Int = -1
-    var towerTileHeight: Int = -1
-
-    val towerWeaponAnimNumRowTiles = 6
-    var towerWeaponAnimTileSize: Int = -1
 
     private val terrainNumRowTiles = 16
     var terrainTileSize: Int = -1
@@ -40,26 +30,40 @@ object TileAtlas {
         terrainBitmap = context.decodeBitmap(R.drawable.grass_tileset)
         terrainTileSize = terrainBitmap.height / terrainNumRowTiles
 
-        tower1Bitmap = context.decodeBitmap(R.drawable.tower_01)
-        towerTileWidth = tower1Bitmap.width / towerNumColTiles
-        towerTileHeight = tower1Bitmap.height
-
-        tower1WeaponAnimBitmap = context.decodeBitmap(R.drawable.tower_01___level_01___weapon)
-        towerWeaponAnimTileSize = tower1WeaponAnimBitmap.width / towerWeaponAnimNumRowTiles
-
         initialiseTowers(context)
     }
 
     val towerWeaponBitmapScaleFactor = 1.5f
     val towerWeaponBitmapYOffsetPercentOfTowerHeightByLevel: Map<Int, Float> = mapOf(
-        1 to 0.70f,
-        2 to 0.75f,
-        3 to 0.80f,
+        1 to (0.5f + 0.125f),
+        2 to (0.5f + 0.266f),
+        3 to (0.5f + 0.406f),
     )
+
+    val weaponShootOnFrameNumber: Map<Pair<TowerType, Int>, Int> = mapOf(
+        (TowerType.TOWER_1 to 1) to 2,
+        (TowerType.TOWER_1 to 2) to 2,
+        (TowerType.TOWER_1 to 3) to 2,
+        (TowerType.TOWER_2 to 1) to 6,
+        (TowerType.TOWER_2 to 2) to 9,
+        (TowerType.TOWER_2 to 3) to 11,
+    )
+
+    fun weaponRotatesWithTarget(type: TowerType): Boolean = when (type) {
+        TowerType.TOWER_1 -> true
+        TowerType.TOWER_2 -> false
+        TowerType.TOWER_3 -> true
+        TowerType.TOWER_4 -> true
+        TowerType.TOWER_5 -> true
+        TowerType.TOWER_6 -> true
+        TowerType.TOWER_7 -> true
+        TowerType.TOWER_8 -> true
+    }
 
     val towerBitmaps = mutableMapOf<TowerType, Bitmap>()
     val towerWeaponBitmaps = mutableMapOf<Pair<TowerType, Int>, Bitmap>()
-    val towerWeaponAnimSpecs = mutableMapOf<Pair<TowerType, Int>, AnimationSpec>()
+    val towerWeaponIdleAnimSpecs = mutableMapOf<Pair<TowerType, Int>, AnimationSpec>()
+    val towerWeaponShootAnimSpecs = mutableMapOf<Pair<TowerType, Int>, AnimationSpec>()
     val towerProjectileBitmaps = mutableMapOf<Pair<TowerType, Int>, Bitmap>()
     val towerProjectileImpactBitmaps = mutableMapOf<Pair<TowerType, Int>, Bitmap>()
     private fun initialiseTowers(context: Context) {
@@ -142,7 +146,15 @@ object TileAtlas {
         towerWeaponBitmaps[TowerType.TOWER_8 to 3] = context.decodeBitmap(R.drawable.tower_08___level_03___weapon)
 
         towerWeaponBitmaps.forEach { (key, bitmap) ->
-            towerWeaponAnimSpecs[key] = genericAnimSpec(bitmap, key)
+            val hasIdleAnim = key.first in listOf(TowerType.TOWER_2, TowerType.TOWER_5)
+
+            if (hasIdleAnim) {
+                val (idleAnim, shootAnim) = genericTwoRowAnimSpec(bitmap, key)
+                towerWeaponIdleAnimSpecs[key] = idleAnim
+                towerWeaponShootAnimSpecs[key] = shootAnim
+            } else {
+                towerWeaponShootAnimSpecs[key] = genericAnimSpec(bitmap, key)
+            }
         }
     }
 
@@ -241,14 +253,11 @@ fun Canvas.drawTerrainTile(entity: TiledEntity, destRect: RectF) {
 }
 
 fun Canvas.drawTowerEntity(entity: TowerEntity, destRect: RectF) {
-    val towerBitmap = when (entity.spec) {
-        TowerSpec.FAST -> TileAtlas.tower1Bitmap
-        TowerSpec.STRONG -> TODO()
-        TowerSpec.SPREADER -> TODO()
-    }
+    val atlasTowerType = entity.spec.toAtlasTowerType()
+    val towerBitmap = TileAtlas.towerBitmaps[atlasTowerType]!!
     val tilePos = TilePos(entity.currLevel - 1, 0)
 
-    drawTowerTile(towerBitmap, tilePos, destRect)
+    drawTowerTile(towerBitmap, entity.spec.upgradeSpec.maxLevel, tilePos, destRect)
 }
 
 fun Canvas.drawObstacleTile(randomSeed: Int, destRect: RectF) {
@@ -270,6 +279,43 @@ private fun Canvas.drawTerrainTile(tilePos: TilePos, destRect: RectF) {
         destRect,
         null
     )
+}
+
+private fun genericTwoRowAnimSpec(bitmap: Bitmap, debugInfo: Pair<TowerType, Int>): Pair<AnimationSpec, AnimationSpec> {
+    val topBitmap = Bitmap.createBitmap(
+        bitmap,
+        0,
+        0,
+        bitmap.width,
+        bitmap.height / 2,
+    )
+    val bottomBitmap = Bitmap.createBitmap(
+        bitmap,
+        0,
+        bitmap.height / 2,
+        bitmap.width,
+        bitmap.height / 2,
+    )
+    val idleAnimSpec = genericAnimSpec(topBitmap, debugInfo)
+    val shootAnimSpec = genericAnimSpec(bottomBitmap, debugInfo)
+
+    val transparentBitmap = Bitmap.createBitmap(
+        idleAnimSpec.tileSize,
+        idleAnimSpec.tileSize,
+        idleAnimSpec.bitmaps.first().config
+    )
+
+    // remove empty frames since the idle and shoot anims might not have the same frame count
+    val idleSanitizedAnimBitmaps = idleAnimSpec.bitmaps.filter {
+        !it.sameAs(transparentBitmap)
+    }
+    val shootSanitizedAnimBitmaps = shootAnimSpec.bitmaps.filter {
+        !it.sameAs(transparentBitmap)
+    }
+
+    val idleSanitizedAnimSpec = AnimationSpec(idleSanitizedAnimBitmaps, idleAnimSpec.tileSize)
+    val shootSanitizedAnimSpec = AnimationSpec(shootSanitizedAnimBitmaps, shootAnimSpec.tileSize)
+    return idleSanitizedAnimSpec to shootSanitizedAnimSpec
 }
 
 private fun genericAnimSpec(bitmap: Bitmap, debugInfo: Pair<TowerType, Int>): AnimationSpec {
@@ -329,9 +375,11 @@ fun Canvas.drawDebugTile(destRect: RectF) {
     )
 }
 
-private fun Canvas.drawTowerTile(bitmap: Bitmap, tilePos: TilePos, destRect: RectF) {
-    val towerTileWidth = TileAtlas.towerTileWidth
-    val towerTileHeight = TileAtlas.towerTileHeight
+private fun Canvas.drawTowerTile(bitmap: Bitmap, numTotalTiles: Int, tilePos: TilePos, destRect: RectF) {
+    check(bitmap.width % numTotalTiles.toFloat() == 0f)
+
+    val towerTileWidth = bitmap.width / numTotalTiles
+    val towerTileHeight = bitmap.height
     val x = tilePos.x * towerTileWidth
     val y = tilePos.y * towerTileHeight
     this.drawBitmap(

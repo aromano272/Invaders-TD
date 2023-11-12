@@ -6,7 +6,6 @@ import android.graphics.Paint
 import com.andreromano.invaders.TerrainType
 import com.andreromano.invaders.TileAtlas
 import com.andreromano.invaders.TiledEntity
-import com.andreromano.invaders.TowerType
 import com.andreromano.invaders.scenes.level.levelState
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.animation.AnimatedEntity
@@ -104,10 +103,11 @@ class TowerEntity(
     private fun initialiseWeaponEntity() {
         weaponEntity = TowerWeaponEntity(
             pos = pos - Vec2F(0f, height.toFloat() * TileAtlas.towerWeaponBitmapYOffsetPercentOfTowerHeightByLevel[currLevel]!!),
-            animationSpec = TileAtlas.towerWeaponAnimSpecs[spec.toAtlasTowerType() to currLevel]!!,
+            animationSpec = TileAtlas.towerWeaponShootAnimSpecs[spec.toAtlasTowerType() to currLevel]!!,
             scale = TileAtlas.towerWeaponBitmapScaleFactor,
             towerPos = pos,
             towerSpec = spec,
+            towerLevel = currLevel,
             shootDamage = currShootDamage,
             shootDelay = currShootDelay,
             rangeRadius = rangeRadius,

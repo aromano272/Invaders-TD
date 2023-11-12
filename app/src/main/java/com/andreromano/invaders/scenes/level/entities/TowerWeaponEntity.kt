@@ -2,11 +2,13 @@ package com.andreromano.invaders.scenes.level.entities
 
 import android.graphics.Color
 import android.graphics.Paint
+import com.andreromano.invaders.TileAtlas
 import com.andreromano.invaders.scenes.level.levelState
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.angleBetweenYAnd
 import com.andreromano.invaders.animation.AnimatedEntity
 import com.andreromano.invaders.animation.AnimationSpec
+import com.andreromano.invaders.toAtlasTowerType
 
 class TowerWeaponEntity(
     pos: Vec2F,
@@ -14,6 +16,7 @@ class TowerWeaponEntity(
     scale: Float,
     private val towerPos: Vec2F,
     private val towerSpec: TowerSpec,
+    private val towerLevel: Int,
     private val shootDamage: Int,
     private val shootDelay: Int,
     private val rangeRadius: Float,
@@ -24,7 +27,8 @@ class TowerWeaponEntity(
     durationMs = shootDelay,
     scale = scale,
 ) {
-    private val shootsOnFrameNumber = 2
+    private val shootsOnFrameNumber = TileAtlas.weaponShootOnFrameNumber[towerSpec.toAtlasTowerType() to towerLevel]
+    private val rotatesWithTarget = TileAtlas.weaponRotatesWithTarget(towerSpec.toAtlasTowerType())
 
     private val radiusPaint = Paint().apply {
         style = Paint.Style.STROKE
@@ -51,8 +55,10 @@ class TowerWeaponEntity(
         val firstEnemy = enemiesWithinRange.first()
         val posDifferenceToEnemy = firstEnemy.pos - towerPos
         val towerToEnemyDirNorm = posDifferenceToEnemy.normalized()
-        // TODO: smooth out the rotation
-        rotationTetha = angleBetweenYAnd(towerToEnemyDirNorm)
+        if (rotatesWithTarget) {
+            // TODO: smooth out the rotation
+            rotationTetha = angleBetweenYAnd(towerToEnemyDirNorm)
+        }
 
         val oldAnimFrame = currFrame
         super.update(deltaTime)
