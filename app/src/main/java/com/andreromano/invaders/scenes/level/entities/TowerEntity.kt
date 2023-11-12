@@ -30,7 +30,7 @@ class TowerEntity(
     height = height,
     terrainType = TerrainType.GRASS
 ) {
-    private lateinit var weaponEntity: AnimatedEntity
+    private lateinit var weaponEntity: TowerWeaponEntity
 
     private val upgradeSpec: UpgradeSpec = spec.upgradeSpec
     private val isSpreader = spec == TowerSpec.SPREADER
@@ -103,8 +103,8 @@ class TowerEntity(
     private fun initialiseWeaponEntity() {
         weaponEntity = TowerWeaponEntity(
             pos = pos - Vec2F(0f, height.toFloat() * TileAtlas.towerWeaponBitmapYOffsetPercentOfTowerHeightByLevel[currLevel]!!),
-            animationSpec = TileAtlas.towerWeaponShootAnimSpecs[spec.toAtlasTowerType() to currLevel]!!,
-            scale = TileAtlas.towerWeaponBitmapScaleFactor,
+            width = width,
+            height = height,
             towerPos = pos,
             towerSpec = spec,
             towerLevel = currLevel,
