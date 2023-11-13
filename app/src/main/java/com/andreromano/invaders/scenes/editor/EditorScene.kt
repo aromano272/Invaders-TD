@@ -25,22 +25,22 @@ class EditorScene(
     private var screenWidth = game.width
     private var screenHeight = game.height
 
-    private val incTileWidthButton = ButtonEntity(this, "+ row" , Vec2F.zero(), 20f, {
+    private val incTileWidthButton = ButtonEntity(this, "+ row" , Vec2F.ZERO, 20f, {
         // EditorState.mapTileWidth++
         gameboardEntity.tileWidth++
         gameboardEntity.invalidate()
     })
-    private val decTileWidthButton = ButtonEntity(this, "- row" , Vec2F.zero(), 20f, {
+    private val decTileWidthButton = ButtonEntity(this, "- row" , Vec2F.ZERO, 20f, {
         // EditorState.mapTileWidth = ( EditorState.mapTileWidth - 1 ).coerceAtLeast(1)
         gameboardEntity.tileWidth--
         gameboardEntity.invalidate()
     })
-    private val incTileHeightButton = ButtonEntity(this, "+ col" , Vec2F.zero(), 20f, {
+    private val incTileHeightButton = ButtonEntity(this, "+ col" , Vec2F.ZERO, 20f, {
         // EditorState.mapTileHeight++
         gameboardEntity.tileHeight++
         gameboardEntity.invalidate()
     })
-    private val decTileHeightButton = ButtonEntity(this, "- col" , Vec2F.zero(), 20f, {
+    private val decTileHeightButton = ButtonEntity(this, "- col" , Vec2F.ZERO, 20f, {
         // EditorState.mapTileHeight = ( EditorState.mapTileHeight - 1 ).coerceAtLeast(1)
         gameboardEntity.tileHeight--
         gameboardEntity.invalidate()
@@ -53,7 +53,7 @@ class EditorScene(
         incTileHeightButton,
         decTileHeightButton,
     )
-    private val gameboardEntity = GameboardEntity(this, Vec2F.zero(), screenWidth, screenHeight)
+    private val gameboardEntity = GameboardEntity(this, Vec2F.ZERO, screenWidth, screenHeight)
 
     override fun updateAndRender(canvas: Canvas, deltaTime: Int) {
         gameboardEntity.entitiesMap.forEachIndexed { tileY, row ->

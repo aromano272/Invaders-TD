@@ -5,8 +5,11 @@ import android.graphics.Color
 import android.graphics.Paint
 import com.andreromano.invaders.Entity
 import com.andreromano.invaders.Vec2F
+import com.andreromano.invaders.angleBetweenYAnd
+import com.andreromano.invaders.dot
 import com.andreromano.invaders.extensions.scale
 import java.util.UUID
+import kotlin.math.abs
 
 class EnemyEntity(
     pos: Vec2F,
@@ -22,6 +25,8 @@ class EnemyEntity(
     height = height,
 ) {
     val id = UUID.randomUUID().toString()
+
+    var facingDirection = Direction.RIGHT
 
     var killed: Boolean = false
     var escaped: Boolean = false
@@ -84,6 +89,15 @@ class EnemyEntity(
                 update(remainingMoveTime.toInt())
             }
         } else {
+            facingDirection = if (abs(movementDirectionNorm.x) > abs(movementDirectionNorm.y)) {
+                if(movementDirectionNorm.x > 0) Direction.RIGHT
+                else Direction.LEFT
+            } else {
+                // flipped < sign because canvas coord system y axis is inverted
+                if(movementDirectionNorm.y < 0) Direction.UP
+                else Direction.DOWN
+            }
+
             pos = newPos
         }
     }
@@ -100,6 +114,17 @@ class EnemyEntity(
             canvas.drawLine(hitbox.left, hitbox.top, hitbox.right, hitbox.top, healthBgPaint)
             canvas.drawLine(hitbox.left, hitbox.top, currHealthLineRight, hitbox.top, healthCurrPaint)
         }
+
+        val paint = Paint().apply {
+            style = Paint.Style.FILL
+        }
+        when (facingDirection) {
+            Direction.UP -> paint.color = Color.RED
+            Direction.RIGHT -> paint.color = Color.GREEN
+            Direction.DOWN -> paint.color = Color.BLUE
+            Direction.LEFT -> paint.color = Color.YELLOW
+        }
+        canvas.drawOval(hitbox.scale(0.20f), paint)
     }
 
     fun addIncomingDamage(damage: Int) {
@@ -112,6 +137,10 @@ class EnemyEntity(
         currIncomingDamage -= damage
         currHealth -= damage / 2
         if (currHealth <= 0) killed = true
+    }
+
+    enum class Direction {
+        UP, RIGHT, DOWN, LEFT
     }
 }
 

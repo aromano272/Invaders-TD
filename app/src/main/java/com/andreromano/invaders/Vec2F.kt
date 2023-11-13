@@ -35,7 +35,11 @@ data class Vec2F(
     }
 
     companion object {
-        fun zero() = Vec2F(0f, 0f)
+        val ZERO = Vec2F(0f, 0f)
+        val UP = Vec2F(0f, 1f)
+        val DOWN = Vec2F(0f, -1f)
+        val LEFT = Vec2F(-1f, 0f)
+        val RIGHT = Vec2F(1f, 0f)
     }
 }
 
@@ -45,7 +49,7 @@ operator fun Float.times(vec: Vec2F): Vec2F = vec * this
 fun dot(a: Vec2F, b: Vec2F): Float {
     // TODO(aromano): Not sure if this is actually true, Freya mentioned that in dot(a, b), one of the vectors needs to be normalized
     //                Actually there are cases where we don't want this but it's move advanced cases so ill keep this here for now
-//    check(a.magnitude == 1f || b.magnitude == 1f)
+    check(a.magnitude == 1f || b.magnitude == 1f)
     return a.x * b.x + a.y * b.y
 }
 
