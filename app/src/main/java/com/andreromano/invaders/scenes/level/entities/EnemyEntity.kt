@@ -3,9 +3,14 @@ package com.andreromano.invaders.scenes.level.entities
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import com.andreromano.invaders.EnemyMovementType
+import com.andreromano.invaders.EnemyType
 import com.andreromano.invaders.Entity
+import com.andreromano.invaders.FacingDirection
+import com.andreromano.invaders.TileAtlas
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.angleBetweenYAnd
+import com.andreromano.invaders.animation.AnimatedEntity
 import com.andreromano.invaders.dot
 import com.andreromano.invaders.extensions.scale
 import java.util.UUID
@@ -26,7 +31,9 @@ class EnemyEntity(
 ) {
     val id = UUID.randomUUID().toString()
 
-    var facingDirection = Direction.RIGHT
+    lateinit var animatedEntity: AnimatedEntity
+
+    lateinit var facingDirection: FacingDirection
 
     var killed: Boolean = false
     var escaped: Boolean = false
@@ -75,6 +82,27 @@ class EnemyEntity(
         val newPos = pos + (movementDirectionNorm * moveAmount)
         val overshootDistance = moveAmount - distanceToTarget
 
+        val newFacingDirection = if (abs(movementDirectionNorm.x) > abs(movementDirectionNorm.y)) {
+            if(movementDirectionNorm.x > 0) FacingDirection.RIGHT
+            else FacingDirection.LEFT
+        } else {
+            // flipped < sign because canvas coord system y axis is inverted
+            if(movementDirectionNorm.y < 0) FacingDirection.UP
+            else FacingDirection.DOWN
+        }
+        if (!::facingDirection.isInitialized || facingDirection != newFacingDirection) {
+            val key = Triple(EnemyType.G3, newFacingDirection, EnemyMovementType.MOVING)
+            animatedEntity = AnimatedEntity(
+                pos = pos,
+                spec = TileAtlas.enemyAnimSpecs[key]!!,
+                durationMs = TileAtlas.enemyAnimDuration,
+            )
+            animatedEntity.start()
+            facingDirection = newFacingDirection
+        }
+        animatedEntity.pos = pos
+        animatedEntity.update(deltaTime)
+
         // The newPos overshoot the target, so the newPos will be at the target and we'll call update(time) with the remaining time after the initial move
         if (overshootDistance > 0) {
             // Assuming movement speed is linear
@@ -89,21 +117,12 @@ class EnemyEntity(
                 update(remainingMoveTime.toInt())
             }
         } else {
-            facingDirection = if (abs(movementDirectionNorm.x) > abs(movementDirectionNorm.y)) {
-                if(movementDirectionNorm.x > 0) Direction.RIGHT
-                else Direction.LEFT
-            } else {
-                // flipped < sign because canvas coord system y axis is inverted
-                if(movementDirectionNorm.y < 0) Direction.UP
-                else Direction.DOWN
-            }
-
             pos = newPos
         }
     }
 
     override fun render(canvas: Canvas) {
-        canvas.drawOval(hitbox.scale(0.75f), paint)
+        animatedEntity.render(canvas)
         if (withinTowerRange) {
             canvas.drawOval(hitbox.scale(0.20f), withinTowerRangePaint)
         }
@@ -114,17 +133,6 @@ class EnemyEntity(
             canvas.drawLine(hitbox.left, hitbox.top, hitbox.right, hitbox.top, healthBgPaint)
             canvas.drawLine(hitbox.left, hitbox.top, currHealthLineRight, hitbox.top, healthCurrPaint)
         }
-
-        val paint = Paint().apply {
-            style = Paint.Style.FILL
-        }
-        when (facingDirection) {
-            Direction.UP -> paint.color = Color.RED
-            Direction.RIGHT -> paint.color = Color.GREEN
-            Direction.DOWN -> paint.color = Color.BLUE
-            Direction.LEFT -> paint.color = Color.YELLOW
-        }
-        canvas.drawOval(hitbox.scale(0.20f), paint)
     }
 
     fun addIncomingDamage(damage: Int) {
@@ -137,10 +145,6 @@ class EnemyEntity(
         currIncomingDamage -= damage
         currHealth -= damage / 2
         if (currHealth <= 0) killed = true
-    }
-
-    enum class Direction {
-        UP, RIGHT, DOWN, LEFT
     }
 }
 

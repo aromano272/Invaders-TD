@@ -4,11 +4,9 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Rect
 import android.graphics.RectF
-import androidx.core.graphics.get
 import androidx.core.graphics.toRectF
 import com.andreromano.invaders.animation.AnimatedEntity
 import com.andreromano.invaders.animation.AnimationSpec
@@ -31,6 +29,8 @@ object TileAtlas {
         terrainTileSize = terrainBitmap.height / terrainNumRowTiles
 
         initialiseTowers(context)
+        initialiseEnemies(context)
+        val a = 1
     }
 
     val towerWeaponBitmapScaleFactor = 1.5f
@@ -153,8 +153,76 @@ object TileAtlas {
                 towerWeaponIdleAnimSpecs[key] = idleAnim
                 towerWeaponShootAnimSpecs[key] = shootAnim
             } else {
-                towerWeaponShootAnimSpecs[key] = genericAnimSpec(bitmap, key)
+                towerWeaponShootAnimSpecs[key] = genericAnimSpec(bitmap, sanitizeFrames = false, key)
             }
+        }
+    }
+
+    val enemyAnimDuration = 850
+    val enemyBitmaps = mutableMapOf<Triple<EnemyType, FacingDirection, EnemyMovementType>, Bitmap>()
+    val enemyAnimSpecs = mutableMapOf<Triple<EnemyType, FacingDirection, EnemyMovementType>, AnimationSpec>()
+    private fun initialiseEnemies(context: Context) {
+        val tilesets = mapOf(
+            // TODO: this bloody tileset is the only one that's not square but rather 2x1, implement later
+//            EnemyType.G1 to context.decodeBitmap(R.drawable.firebug),
+            EnemyType.G2 to context.decodeBitmap(R.drawable.leafbug),
+            EnemyType.G3 to context.decodeBitmap(R.drawable.magma_crab),
+            EnemyType.G4 to context.decodeBitmap(R.drawable.scorpion),
+            EnemyType.F1 to context.decodeBitmap(R.drawable.clampbeetle),
+            EnemyType.F2 to context.decodeBitmap(R.drawable.firewasp),
+            EnemyType.F3 to context.decodeBitmap(R.drawable.flying_locust),
+            EnemyType.F4 to context.decodeBitmap(R.drawable.voidbutterfly),
+        )
+
+        val bitmapFacingDirectionOrder: (EnemyType) -> List<FacingDirection> = { type ->
+            when (type) {
+//                EnemyType.G1 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.RIGHT)
+                EnemyType.G2 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.RIGHT)
+                EnemyType.G3 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.LEFT)
+                EnemyType.G4 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.LEFT)
+                EnemyType.F1 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.LEFT)
+                EnemyType.F2 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.RIGHT)
+                EnemyType.F3 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.RIGHT)
+                EnemyType.F4 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.RIGHT)
+            }
+        }
+
+        tilesets.forEach { (enemyType, bitmap) ->
+            val facingDirectionOrder = bitmapFacingDirectionOrder(enemyType)
+            val tileSize = bitmap.height / (facingDirectionOrder.size * EnemyMovementType.values().size)
+
+            EnemyMovementType.values().forEachIndexed { movementIndex, movementType ->
+                var leftBitmap: Bitmap? = null
+                var rightBitmap: Bitmap? = null
+                facingDirectionOrder.forEachIndexed { directionIndex, facingDirection ->
+                    val bitmap = Bitmap.createBitmap(
+                        bitmap,
+                        0,
+                        (movementIndex * EnemyMovementType.values().size + directionIndex) * tileSize,
+                        bitmap.width,
+                        tileSize,
+                    )
+                    if (facingDirection == FacingDirection.RIGHT) {
+                        rightBitmap = bitmap
+                    } else if (facingDirection == FacingDirection.LEFT) {
+                        leftBitmap = bitmap
+                    }
+                    val key = Triple(enemyType, facingDirection, movementType)
+                    enemyBitmaps[key] = bitmap
+                }
+
+                if (rightBitmap != null && leftBitmap == null) {
+                    val key = Triple(enemyType, FacingDirection.LEFT, movementType)
+                    enemyBitmaps[key] = rightBitmap!!.flipHorizontally()
+                } else if (leftBitmap != null && rightBitmap == null) {
+                    val key = Triple(enemyType, FacingDirection.RIGHT, movementType)
+                    enemyBitmaps[key] = leftBitmap!!.flipHorizontally()
+                }
+            }
+        }
+
+        enemyBitmaps.forEach { (key, bitmap) ->
+            enemyAnimSpecs[key] = genericAnimSpec(bitmap, sanitizeFrames = true, key)
         }
     }
 
@@ -176,6 +244,23 @@ enum class TowerType {
     TOWER_6,
     TOWER_7,
     TOWER_8,
+}
+
+enum class EnemyType {
+//    G1,
+    G2,
+    G3,
+    G4,
+    F1,
+    F2,
+    F3,
+    F4,
+}
+
+enum class EnemyMovementType {
+    IDLE,
+    MOVING,
+    DIEING,
 }
 
 fun TowerSpec.toAtlasTowerType(): TowerType = when (this) {
@@ -296,40 +381,39 @@ private fun genericTwoRowAnimSpec(bitmap: Bitmap, debugInfo: Pair<TowerType, Int
         bitmap.width,
         bitmap.height / 2,
     )
-    val idleAnimSpec = genericAnimSpec(topBitmap, debugInfo)
-    val shootAnimSpec = genericAnimSpec(bottomBitmap, debugInfo)
+    val idleAnimSpec = genericAnimSpec(topBitmap, sanitizeFrames = true, debugInfo)
+    val shootAnimSpec = genericAnimSpec(bottomBitmap, sanitizeFrames = true, debugInfo)
 
-    val transparentBitmap = Bitmap.createBitmap(
-        idleAnimSpec.tileSize,
-        idleAnimSpec.tileSize,
-        idleAnimSpec.bitmaps.first().config
-    )
-
-    // remove empty frames since the idle and shoot anims might not have the same frame count
-    val idleSanitizedAnimBitmaps = idleAnimSpec.bitmaps.filter {
-        !it.sameAs(transparentBitmap)
-    }
-    val shootSanitizedAnimBitmaps = shootAnimSpec.bitmaps.filter {
-        !it.sameAs(transparentBitmap)
-    }
-
-    val idleSanitizedAnimSpec = AnimationSpec(idleSanitizedAnimBitmaps, idleAnimSpec.tileSize)
-    val shootSanitizedAnimSpec = AnimationSpec(shootSanitizedAnimBitmaps, shootAnimSpec.tileSize)
-    return idleSanitizedAnimSpec to shootSanitizedAnimSpec
+    return idleAnimSpec to shootAnimSpec
 }
 
-private fun genericAnimSpec(bitmap: Bitmap, debugInfo: Pair<TowerType, Int>): AnimationSpec {
+private fun genericAnimSpec(bitmap: Bitmap, sanitizeFrames: Boolean, debugInfo: Any? = null): AnimationSpec {
     check(bitmap.width > bitmap.height)
     check(bitmap.width % bitmap.height == 0) {
         "$debugInfo"
     }
     val numFrames = bitmap.width / bitmap.height
     val tileSize = bitmap.height
-    return AnimationSpec(
+
+    val spec = AnimationSpec(
         bitmap = bitmap,
         numFrames = numFrames,
         tileSize = tileSize,
     )
+
+    return if (sanitizeFrames) {
+        val transparentBitmap = Bitmap.createBitmap(
+            spec.tileSize,
+            spec.tileSize,
+            spec.bitmaps.first().config
+        )
+        val sanitizedFrames = spec.bitmaps.filter {
+            !it.sameAs(transparentBitmap)
+        }
+        AnimationSpec(sanitizedFrames, spec.tileSize)
+    } else {
+        spec
+    }
 }
 
 fun Canvas.drawAnimationTile(entity: AnimatedEntity, destRect: RectF, scale: Float) {
@@ -395,3 +479,14 @@ private fun Canvas.drawTowerTile(bitmap: Bitmap, numTotalTiles: Int, tilePos: Ti
     )
 }
 
+// To flip horizontally:
+fun Bitmap.flipHorizontally(): Bitmap {
+    val matrix = Matrix().apply { postScale(-1f, 1f, width / 2f, height / 2f) }
+    return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+}
+
+// To flip vertically:
+fun Bitmap.flipVertically(): Bitmap {
+    val matrix = Matrix().apply { postScale(1f, -1f, width / 2f, height / 2f) }
+    return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+}
