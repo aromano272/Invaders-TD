@@ -86,8 +86,7 @@ class EnemyEntity(
             if(movementDirectionNorm.x > 0) FacingDirection.RIGHT
             else FacingDirection.LEFT
         } else {
-            // flipped < sign because canvas coord system y axis is inverted
-            if(movementDirectionNorm.y < 0) FacingDirection.UP
+            if(movementDirectionNorm.y > 0) FacingDirection.UP
             else FacingDirection.DOWN
         }
         if (!::facingDirection.isInitialized || facingDirection != newFacingDirection) {

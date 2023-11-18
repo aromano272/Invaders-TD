@@ -176,14 +176,14 @@ object TileAtlas {
 
         val bitmapFacingDirectionOrder: (EnemyType) -> List<FacingDirection> = { type ->
             when (type) {
-//                EnemyType.G1 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.RIGHT)
-                EnemyType.G2 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.RIGHT)
-                EnemyType.G3 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.LEFT)
-                EnemyType.G4 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.LEFT)
-                EnemyType.F1 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.LEFT)
-                EnemyType.F2 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.RIGHT)
-                EnemyType.F3 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.RIGHT)
-                EnemyType.F4 -> listOf(FacingDirection.DOWN, FacingDirection.UP, FacingDirection.RIGHT)
+//                EnemyType.G1 -> listOf(FacingDirection.UP, FacingDirection.DOWN, FacingDirection.RIGHT)
+                EnemyType.G2 -> listOf(FacingDirection.UP, FacingDirection.DOWN, FacingDirection.RIGHT)
+                EnemyType.G3 -> listOf(FacingDirection.UP, FacingDirection.DOWN, FacingDirection.LEFT)
+                EnemyType.G4 -> listOf(FacingDirection.UP, FacingDirection.DOWN, FacingDirection.LEFT)
+                EnemyType.F1 -> listOf(FacingDirection.UP, FacingDirection.DOWN, FacingDirection.LEFT)
+                EnemyType.F2 -> listOf(FacingDirection.UP, FacingDirection.DOWN, FacingDirection.RIGHT)
+                EnemyType.F3 -> listOf(FacingDirection.UP, FacingDirection.DOWN, FacingDirection.RIGHT)
+                EnemyType.F4 -> listOf(FacingDirection.UP, FacingDirection.DOWN, FacingDirection.RIGHT)
             }
         }
 

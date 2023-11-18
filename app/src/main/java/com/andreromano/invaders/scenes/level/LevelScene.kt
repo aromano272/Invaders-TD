@@ -119,13 +119,22 @@ class LevelScene(
             return
         }
         val deltaTime = (deltaTime * (levelState.gameSpeedEntity?.currMultiplier ?: 1f)).toInt()
+        val towerEntities = mutableListOf<TowerEntity>()
         levelState.entitiesMap.forEach { rows ->
             rows.forEach { entity ->
+                if (entity is TowerEntity) {
+                    towerEntities += entity
+                    return@forEach
+                }
                 entity?.update(deltaTime)
                 entity?.render(canvas)
             }
         }
         levelState.enemyEntities.forEach { entity ->
+            entity.update(deltaTime)
+            entity.render(canvas)
+        }
+        towerEntities.forEach { entity ->
             entity.update(deltaTime)
             entity.render(canvas)
         }
