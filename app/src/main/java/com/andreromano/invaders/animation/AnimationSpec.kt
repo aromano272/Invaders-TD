@@ -4,27 +4,30 @@ import android.graphics.Bitmap
 
 data class AnimationSpec(
     val bitmaps: List<Bitmap>,
-    val tileSize: Int,
+    val tileWidth: Int,
+    val tileHeight: Int,
 ) {
     constructor(
         bitmap: Bitmap,
         numFrames: Int,
-        tileSize: Int,
+        tileWidth: Int,
+        tileHeight: Int,
     ) : this(
-        getFrames(bitmap, numFrames, tileSize),
-        tileSize,
+        getFrames(bitmap, numFrames, tileWidth, tileHeight),
+        tileWidth,
+        tileHeight,
     )
     companion object {
-        fun getFrames(bitmap: Bitmap, numColTiles: Int, tileSize: Int): List<Bitmap> =
+        fun getFrames(bitmap: Bitmap, numColTiles: Int, tileWidth: Int, tileHeight: Int): List<Bitmap> =
             (0 until numColTiles).map { index ->
-                val x = index * tileSize
+                val x = index * tileWidth
                 val y = 0
                 Bitmap.createBitmap(
                     bitmap,
                     x,
                     y,
-                    tileSize,
-                    tileSize,
+                    tileWidth,
+                    tileHeight,
                 )
             }
     }

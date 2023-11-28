@@ -4,21 +4,27 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import com.andreromano.invaders.Entity
+import com.andreromano.invaders.TileAtlas
 import com.andreromano.invaders.Vec2F
+import com.andreromano.invaders.angleBetweenYAnd
+import com.andreromano.invaders.animation.AnimatedEntity
 import com.andreromano.invaders.extensions.scale
+import com.andreromano.invaders.toAtlasTowerType
 
 class BulletEntity(
     pos: Vec2F,
-    width: Int,
-    height: Int,
+    private val towerSpec: TowerSpec,
+    private val towerLevel: Int,
     private val damage: Int,
     private val targetEnemyId: String,
     private val speed: Int,
     private val getEnemyById: (String) -> EnemyEntity?
-) : Entity(
+) : AnimatedEntity(
     pos = pos,
-    width = width,
-    height = height,
+    spec = TileAtlas.towerProjectileAnimSpec[Pair(towerSpec.toAtlasTowerType(), towerLevel)]!!,
+    durationMs = 200,
+    scale = 1.5f,
+    autoStart = true,
 ) {
     var destroyed: Boolean = false
 
@@ -33,11 +39,13 @@ class BulletEntity(
             destroyed = true
             return
         }
-
         val moveAmount = (speed * deltaTime) / 5f
 
         val posDifferenceToEnemy = enemy.pos - pos
         val movDirNorm = posDifferenceToEnemy.normalized()
+
+        rotationTetha = angleBetweenYAnd(movDirNorm)
+        super.update(deltaTime)
 
         val newPos = pos + (movDirNorm * moveAmount)
 
@@ -67,9 +75,5 @@ class BulletEntity(
         }
 
         pos = newPos
-    }
-
-    override fun render(canvas: Canvas) {
-        canvas.drawOval(hitbox.scale(0.25f), paint)
     }
 }

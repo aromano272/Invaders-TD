@@ -9,7 +9,6 @@ import com.andreromano.invaders.scenes.level.levelState
 import com.andreromano.invaders.Vec2F
 import com.andreromano.invaders.angleBetweenYAnd
 import com.andreromano.invaders.animation.AnimatedEntity
-import com.andreromano.invaders.animation.AnimationSpec
 import com.andreromano.invaders.toAtlasTowerType
 
 class TowerWeaponEntity(
@@ -69,13 +68,17 @@ class TowerWeaponEntity(
         }
         isIdle = enemiesWithinRange.isEmpty()
         if (isIdle) {
-            shootAnimEntity.stop()
-            if (idleAnimEntity != null && !idleAnimEntity.isRunning) idleAnimEntity.start()
-            return
+            shootAnimEntity.stopAtEndOfLoop()
+            idleAnimEntity?.start()
         } else {
             idleAnimEntity?.stop()
-            if (!shootAnimEntity.isRunning) shootAnimEntity.start()
+            shootAnimEntity.start()
         }
+        val oldAnimFrame = shootAnimEntity.currFrame
+        shootAnimEntity.update(deltaTime)
+        val newAnimFrame = shootAnimEntity.currFrame
+        if (isIdle) return
+
         val firstEnemy = enemiesWithinRange.first()
         val posDifferenceToEnemy = firstEnemy.pos - towerPos
         val towerToEnemyDirNorm = posDifferenceToEnemy.normalized()
@@ -84,14 +87,12 @@ class TowerWeaponEntity(
             shootAnimEntity.rotationTetha = angleBetweenYAnd(towerToEnemyDirNorm)
         }
 
-        val oldAnimFrame = shootAnimEntity.currFrame
-        shootAnimEntity.update(deltaTime)
-        val newAnimFrame = shootAnimEntity.currFrame
         val shouldShoot = shootAnimEntity.isRunning && oldAnimFrame != newAnimFrame && newAnimFrame == shootsOnFrameNumber
         // TODO: maybe not the greatest idea to tie the shooting to the animation but seemed
         //       to be the simplest way of not running the risk of having these go out of sync
         //       and also having the shooting occur on specific frames since not all weapons fire
         //       on the same animation frame
+        println("$oldAnimFrame $newAnimFrame $shouldShoot")
         if (!shouldShoot) return
 
         val getEnemyById: (String) -> EnemyEntity? = { id ->
@@ -102,12 +103,12 @@ class TowerWeaponEntity(
             val targetEnemies = enemiesWithinRange.shuffled().take(4 )
 
             targetEnemies.forEach { enemy ->
-                val bullet = BulletEntity(pos,  width, height, shootDamage, enemy.id, 10, getEnemyById)
+                val bullet = BulletEntity(pos, towerSpec, towerLevel, shootDamage, enemy.id, 10, getEnemyById)
                 enemy.addIncomingDamage(shootDamage)
                 spawnBullet(bullet)
             }
         } else {
-            val bullet = BulletEntity(pos, width, height, shootDamage, firstEnemy.id, 10, getEnemyById)
+            val bullet = BulletEntity(pos, towerSpec, towerLevel, shootDamage, firstEnemy.id, 10, getEnemyById)
             firstEnemy.addIncomingDamage(shootDamage)
             spawnBullet(bullet)
         }
