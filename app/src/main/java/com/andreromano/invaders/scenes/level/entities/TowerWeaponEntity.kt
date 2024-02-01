@@ -100,7 +100,8 @@ class TowerWeaponEntity(
         }
 
         if (towerSpec == TowerSpec.SPREADER) {
-            val targetEnemies = enemiesWithinRange.shuffled().take(4 )
+            val bulletCount = towerSpec.bulletsFiredPerShotForLevel(towerLevel)
+            val targetEnemies = enemiesWithinRange.shuffled().take(bulletCount)
 
             targetEnemies.forEach { enemy ->
                 val bullet = BulletEntity(pos, towerSpec, towerLevel, shootDamage, enemy.id, 10, getEnemyById)

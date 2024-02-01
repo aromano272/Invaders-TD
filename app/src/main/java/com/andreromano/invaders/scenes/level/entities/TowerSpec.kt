@@ -1,6 +1,7 @@
 package com.andreromano.invaders.scenes.level.entities
 
 import android.graphics.Color
+import java.lang.UnsupportedOperationException
 
 enum class TowerSpec(
     val shootDamage: Int,
@@ -11,7 +12,7 @@ enum class TowerSpec(
 ) {
     FAST(120, 600, 50, 2f, UpgradeSpec.FAST),
     STRONG(300, 1400, 100, 4f, UpgradeSpec.STRONG),
-    SPREADER(100, 800, 150, 2f, UpgradeSpec.SPREADER),
+    SPREADER(150, 500, 150, 2f, UpgradeSpec.SPREADER),
 }
 
 val TowerSpec.color: Int
@@ -26,12 +27,12 @@ enum class UpgradeSpec(
     val shootDelayMultiplier: Float,
     val upgradeCostMultiplier: Float,
     val rangeRadiusToWidthFactorMultiplier: Float,
-    val additionalBullets: Int,
+    val additionalBulletsFiredPerShotMultiplier: Int,
     val maxLevel: Int
 ) {
     FAST(1.75f, 0.75f, 2f, 1.05f, 0, 3),
     STRONG(2.25f, 0.8f, 2f, 1.1f, 0, 3),
-    SPREADER(1.2f, 0.8f, 2f, 1.05f, 1, 3),
+    SPREADER(1.2f, 0.8f, 2f, 1.05f, 2, 3),
 }
 
 fun TowerSpec.totalMoneySpentForLevel(level: Int): Int {
@@ -69,4 +70,12 @@ fun TowerSpec.rangeRadiusToWidthFactorForLevel(level: Int): Int {
         result *= upgradeSpec.rangeRadiusToWidthFactorMultiplier
     }
     return result.toInt()
+}
+fun TowerSpec.bulletsFiredPerShotForLevel(level: Int): Int {
+    if (this != TowerSpec.SPREADER) throw UnsupportedOperationException("Make sure the rest of the code handles this correct if we plan to use this on towers that are not SPREADER")
+    var result = 1
+    repeat(level - 1) {
+        result *= upgradeSpec.additionalBulletsFiredPerShotMultiplier
+    }
+    return result
 }

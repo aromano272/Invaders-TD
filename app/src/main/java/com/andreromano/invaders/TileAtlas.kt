@@ -46,6 +46,9 @@ object TileAtlas {
         (TowerType.TOWER_2 to 1) to 5,
         (TowerType.TOWER_2 to 2) to 8,
         (TowerType.TOWER_2 to 3) to 10,
+        (TowerType.TOWER_7 to 1) to 3,
+        (TowerType.TOWER_7 to 2) to 3,
+        (TowerType.TOWER_7 to 3) to 3,
     )
 
     fun weaponRotatesWithTarget(type: TowerType): Boolean = when (type) {
